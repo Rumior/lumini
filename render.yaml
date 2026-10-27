@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: lumini-api
+    env: node
+    buildCommand: npm install && npm run server:build
+    startCommand: node dist-server/server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ORIGIN
+        value: https://lumini-app.vercel.app
+      - key: OPENAI_API_KEY
+        sync: false

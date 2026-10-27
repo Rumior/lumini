@@ -1,0 +1,13 @@
+# FINAL_CHECKLIST
+- [x] Auth/login/logout/session
+- [x] Org creation + membership
+- [x] Workspace tenant-scoped
+- [x] Businesses/Actions APIs
+- [x] AI route scaffold
+- [x] CSRF/validation/authz
+- [x] RLS + tenant transaction
+- [x] UI wired partially, mocks reduced
+- [x] Typechecks/build/tests pass
+- [ ] Full mock removal across all views
+- [ ] Integration/E2E tests comprehensive
+- [ ] Real AI provider credentials/config tested

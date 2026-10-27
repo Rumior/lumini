@@ -1,0 +1,233 @@
+﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { CheckCircle2 } from 'lucide-react'
+import { WorkspaceContext, type WorkspaceState } from './workspace-context'
+import { money } from '@/lib/format'
+import {
+  activeImpactByArea, initialActions, initialMessages, mockCashShape, mockChatCash, mockChatDefault,
+  mockChatNext, mockDates, seedBusiness, seedFinance, seedSettings,
+} from '@/data/mock-data'
+import type { Action, Business, CashPoint, Finance, Message, Settings } from '@/types'
+import {
+  breakEvenUnits,
+  contributionPerUnit,
+  grossMargin,
+  grossProfit,
+  try {
+    return JSON.parse(localStorage.getItem(key) || 'null') || fallback
+  } catch {
+    return fallback
+  }
+}
+
+export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const { logEvent } = useAudit()
+  const { user } = useAuth()
+  const { organization } = useOrganization()
+  void researchConnector
+  const [actions, setActions] = useState<Action[]>(() => loadJSON('lumini-actions', initialActions))
+  const [finance, setFinance] = useState<Finance>(() => loadJSON('lumini-finance', seedFinance))
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [business, setBusiness] = useState<Business>(seedBusiness)
+  const [settings, setSettings] = useState<Settings>(seedSettings)
+  const [chatLoading, setChatLoading] = useState(false)
+  const [toast, setToast] = useState('')
+  const [newActionOpen, setNewActionOpen] = useState(false)
+  const [newActionTitle, setNewActionTitle] = useState('')
+
+  useEffect(() => { localStorage.setItem('lumini-actions', JSON.stringify(actions)) }, [actions])
+  useEffect(() => { localStorage.setItem('lumini-finance', JSON.stringify(finance)) }, [finance])
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(''), 2800)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  // ---- Derived values (using financial engine) --------------------------
+  const completed = actions.filter(a => a.done).length
+  const gross = grossProfit(finance.revenue, finance.direct)
+  const margin = grossMargin(finance.revenue, finance.direct)
+  const operating = operatingResult(finance.revenue, finance.direct, finance.expenses)
+  const contribution = contributionPerUnit(finance.price, finance.variable)
+  const breakEvenResult = breakEvenUnits(finance.fixed, contribution)
+  const breakEven = breakEvenResult.feasible ? breakEvenResult.units : 0
+  const cashData = useMemo<CashPoint[]>(() => {
+    const base = Math.max(operating, 0)
+    return mockCashShape.map(p => ({ month: p.month, actual: p.actual === null ? null : base * p.actual, forecast: base * p.forecast }))
+  }, [operating])
+
+  // ---- Commands ---------------------------------------------------------
+  const showToast = useCallback((message: string) => setToast(message), [])
+
+  const toggleAction = useCallback((id: number) => {
+    setActions(list => list.map(x => {
+      if (x.id !== id) return x
+      const activeImpact = activeImpactByArea[x.area] ?? 'User added'
+      return { ...x, done: !x.done, impact: !x.done ? 'Completed' : activeImpact }
+    }))
+  }, [])
+
+  const removeAction = useCallback((id: number) => {
+    setActions(list => list.filter(x => x.id !== id))
+    setToast('Action removed')
+  }, [])
+
+  const addAction = useCallback((title: string, opts?: Partial<Action>) => {
+    const clean = title.trim()
+    if (!clean) return
+    setActions(list => [...list, { 
+      id: Date.now(), 
+      title: clean, 
+      area: opts?.area || 'My priority', 
+      due: opts?.due || mockDates.newActionDue, 
+      done: false, 
+      impact: opts?.impact || 'User added',
+      reason: opts?.reason,
+      successMetric: opts?.successMetric,
+      followUpDate: opts?.followUpDate,
+      owner: opts?.owner,
+      estimatedCost: opts?.estimatedCost,
+      expectedResult: opts?.expectedResult,
+      risk: opts?.risk,
+    }])
+    setToast('Action added to your plan')
+  }, [])
+
+  const addSuggestedAction = useCallback(() => {
+    setActions(list => list.some(x => x.id === 1) ? list : [initialActions[0], ...list])
+  }, [])
+
+  const getEvidenceForMessage = useCallback((_messageId: number): import('@/types').EvidenceClaim[] => {
+    // Build evidence claims from current context for explainability
+    return [
+      {
+        id: 'ev-fin-1',
+        claimType: 'calculated',
+        text: `Gross margin ${margin.toFixed(1)}% from revenue ${finance.revenue} minus direct costs ${finance.direct}`,
+        source: 'Financial engine (deterministic)',
+        confidence: 'high',
+      },
+      {
+        id: 'ev-user-1',
+        claimType: 'user_reported',
+        text: 'Business figures reported by user for September 2026',
+        source: 'Business profile',
+        observedAt: '2026-10-25',
+        confidence: 'medium',
+      },
+    ]
+  }, [margin, finance.revenue, finance.direct])
+
+  const sendMessage = useCallback((raw: string) => {
+    const text = raw.trim()
+    if (!text || chatLoading) return
+    setMessages(m => [...m, { id: Date.now(), from: 'user', text }])
+    setChatLoading(true)
+    // Orchestrator following blueprint's Ask→Understand→Verify→Calculate→Research→Compare→Recommend→Act→Follow up→Learn loop
+    setTimeout(() => {
+      const lower = text.toLowerCase()
+      const kbItems = retrieveRelevantKnowledge(text, business.stage)
+      let reply: { text: string; detail: string; evidence?: any[]; assumptions?: string[]; calculations?: any[] } = {
+        text: mockChatDefault.text + (kbItems.length > 0 ? `\n\nPrinciple applied: ${kbItems[0].title} — ${kbItems[0].body}` : ''),
+        detail: mockChatDefault.detail + (kbItems.length > 0 ? ` · Knowledge: ${kbItems[0].id} v${kbItems[0].version}` : ''),
+        evidence: getEvidenceForMessage(Date.now()),
+        assumptions: ['Figures are for the reported period and may not include all costs (taxes, debt interest, depreciation, owner withdrawals).'],
+        calculations: [
+          { label: 'Gross margin', value: `${margin.toFixed(1)}%`, formula: '(Revenue - Direct costs) / Revenue × 100' },
+          { label: 'Operating result', value: money(operating), formula: 'Gross profit - Operating expenses' },
+          { label: 'Break-even (units)', value: breakEven > 0 ? `${breakEven} units` : 'Not feasible', formula: 'Fixed costs / (Price - Variable cost)' },
+        ],
+      }
+      if (lower.includes('cash')) {
+        reply = {
+          text: mockChatCash.text,
+          detail: mockChatCash.detail,
+          evidence: getEvidenceForMessage(Date.now()),
+          assumptions: ['Payment timing differs from revenue recognition.', 'Supplier terms and collection period not fully known.'],
+          calculations: [
+            { label: 'Operating result (period)', value: money(operating), formula: 'Revenue - Direct costs - Operating expenses' },
+          ],
+        }
+      }
+      if (lower.includes('price') || lower.includes('margin')) {
+        reply = {
+          text: `At ${money(finance.price)} per unit and ${money(finance.variable)} variable cost, each sale contributes ${money(contribution)}. Gross margin is ${margin.toFixed(1)}% based on reported figures. A price test should protect that contribution while measuring conversion. I would test a modest increase with one customer segment before changing every price.`,
+          detail: 'Calculated from your editable unit economics Â· Contribution per unit calculated deterministically',
+          evidence: getEvidenceForMessage(Date.now()),
+          assumptions: ['Volume remains stable in the test segment.', 'No change to fixed costs in the short term.'],
+          calculations: [
+            { label: 'Contribution per unit', value: money(contribution), formula: 'Selling price - Variable cost' },
+            { label: 'Gross margin', value: `${margin.toFixed(1)}%`, formula: '(Revenue - Direct costs) / Revenue Ã— 100' },
+          ],
+        }
+      }
+      if (lower.includes('next') || lower.includes('priority')) {
+        reply = {
+          text: mockChatNext.text,
+          detail: mockChatNext.detail,
+          evidence: getEvidenceForMessage(Date.now()),
+          assumptions: ['Customer feedback is representative.', 'Issues identified can be addressed without major capital.'],
+        }
+      }
+      setMessages(m => [...m, { id: Date.now() + 1, from: 'lumini', ...reply }])
+      setChatLoading(false)
+    }, 850)
+  }, [chatLoading, finance.price, finance.variable, contribution, margin, operating, breakEven, business.stage])
+
+  const exportCSV = useCallback(() => {
+    const p = mockDates.reportPeriod
+    const rows = [
+      ['Metric', 'Value', 'Period'],
+      ['Revenue', finance.revenue, p],
+      ['Direct costs', finance.direct, p],
+      ['Gross profit', gross, p],
+      ['Gross margin', `${margin.toFixed(1)}%`, p],
+      ['Operating result', operating, p],
+    ]
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'lumini-financial-summary.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    setToast('Financial summary exported')
+  }, [finance.revenue, finance.direct, gross, margin, operating])
+
+  const restoreDemo = useCallback(() => {
+    setFinance(seedFinance)
+    setActions(initialActions)
+    setMessages(initialMessages)
+    setToast('Demo workspace restored')
+  }, [])
+
+  const openNewAction = useCallback((title = '') => { setNewActionTitle(title); setNewActionOpen(true) }, [])
+  const closeNewAction = useCallback(() => setNewActionOpen(false), [])
+  const submitNewAction = useCallback(() => {
+    if (!newActionTitle.trim()) return
+    addAction(newActionTitle)
+    setNewActionTitle('')
+    setNewActionOpen(false)
+  }, [newActionTitle, addAction])
+
+
+
+  const value: WorkspaceState = {
+    actions, finance, messages, business, settings, chatLoading,
+    setFinance, setBusiness, setSettings, setActions,
+    completed, gross, margin, operating, contribution, breakEven, cashData,
+    toggleAction, removeAction, addAction, addSuggestedAction, sendMessage, exportCSV, restoreDemo, showToast,
+    newActionOpen, newActionTitle, setNewActionTitle, openNewAction, closeNewAction, submitNewAction,
+    getEvidenceForMessage,
+  }
+
+  return (
+    <WorkspaceContext.Provider value={value}>
+      {children}
+      {toast && <ToastBubble message={toast} />}
+    </WorkspaceContext.Provider>
+  )
+}
+
+function ToastBubble({ message }: { message: string }) {
+  return <div className="toast"><CheckCircle2 size={18} />{message}</div>
+}

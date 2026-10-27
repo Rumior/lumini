@@ -1,0 +1,113 @@
+import { Router } from "express";
+import { timingSafeEqual } from "node:crypto";
+import { z } from "zod";
+import { withTenantTransaction } from "../lib/tenant-transaction.js";
+import { config } from "../config.js";
+import { requireOrganizationMember } from "../middleware/tenant.js";
+const router = Router({ mergeParams: true });
+const updateSchema = z.object({
+    expectedVersion: z.number().int().positive(),
+    state: z.record(z.string(), z.unknown())
+}).strict();
+function requireAuth(req, res, next) {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+    }
+    return next();
+}
+function requireCsrf(req, res, next) {
+    const origin = req.get("origin");
+    if (origin && origin !== config.APP_ORIGIN) {
+        return res.status(403).json({ error: "Request origin not allowed" });
+    }
+    const supplied = req.get("x-csrf-token");
+    const expected = req.session.csrfToken;
+    if (!supplied || !expected) {
+        return res.status(403).json({ error: "Missing or invalid CSRF token" });
+    }
+    const a = Buffer.from(supplied);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        return res.status(403).json({ error: "Missing or invalid CSRF token" });
+    }
+    return next();
+}
+router.use(requireAuth, requireOrganizationMember);
+router.get("/", async (req, res) => {
+    const rawOrganizationId = req.params["organizationId"];
+    const organizationId = typeof rawOrganizationId === "string" ? rawOrganizationId : undefined;
+    const userId = req.session.userId;
+    if (!organizationId || !userId) {
+        return res.status(404).json({ error: "Workspace not found" });
+    }
+    const workspace = await withTenantTransaction(userId, organizationId, async (client) => {
+        const result = await client.query(`SELECT w.id, w.organization_id, w.state_json, w.version, w.updated_at
+       FROM public.workspaces w
+       WHERE w.organization_id::text = $1
+       LIMIT 1`, [organizationId]);
+        return result.rows[0] ?? null;
+    });
+    if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+    }
+    return res.json({ workspace });
+});
+router.put("/", requireCsrf, async (req, res) => {
+    const rawOrganizationId = req.params["organizationId"];
+    const organizationId = typeof rawOrganizationId === "string" ? rawOrganizationId : undefined;
+    const userId = req.session.userId;
+    if (!organizationId || !userId) {
+        return res.status(404).json({ error: "Workspace not found" });
+    }
+    const parsed = updateSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: "Invalid workspace update.",
+            details: parsed.error.issues.map((issue) => ({
+                field: issue.path.join("."),
+                message: issue.message
+            }))
+        });
+    }
+    const outcome = await withTenantTransaction(userId, organizationId, async (client) => {
+        const updated = await client.query(`UPDATE public.workspaces w
+       SET state_json = $1::jsonb,
+           version = version + 1,
+           updated_by = $2,
+           updated_at = NOW()
+       WHERE w.organization_id::text = $3
+         AND w.version = $4
+       RETURNING w.id, w.organization_id, w.state_json, w.version, w.updated_at`, [
+            JSON.stringify(parsed.data.state),
+            userId,
+            organizationId,
+            parsed.data.expectedVersion
+        ]);
+        if (updated.rows.length > 0) {
+            return { workspace: updated.rows[0], conflict: false };
+        }
+        const current = await client.query(`SELECT w.version
+       FROM public.workspaces w
+       WHERE w.organization_id::text = $1
+       LIMIT 1`, [organizationId]);
+        if (current.rows.length === 0) {
+            return { workspace: null, conflict: false };
+        }
+        return {
+            workspace: null,
+            conflict: true,
+            currentVersion: current.rows[0].version
+        };
+    });
+    if ("currentVersion" in outcome) {
+        return res.status(409).json({
+            error: "Workspace has changed. Fetch the latest version before retrying.",
+            currentVersion: outcome.currentVersion
+        });
+    }
+    if (!outcome.workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+    }
+    return res.json({ workspace: outcome.workspace });
+});
+export default router;

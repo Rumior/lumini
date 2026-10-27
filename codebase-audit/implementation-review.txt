@@ -1,0 +1,2722 @@
+﻿LUMINI IMPLEMENTATION REVIEW
+Generated: 2026-10-27 12:02:17
+Project: C:\Users\HP\Desktop\LUMINI
+Secrets and real .env files are intentionally excluded.
+
+
+==========================================================================================
+FILE: package.json
+==========================================================================================
+{
+  "name": "lumini-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-aspect-ratio": "^1.1.8",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-collapsible": "^1.1.12",
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-hover-card": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-menubar": "^1.1.16",
+    "@radix-ui/react-navigation-menu": "^1.2.14",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-progress": "^1.1.8",
+    "@radix-ui/react-radio-group": "^1.3.8",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slider": "^1.3.6",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toggle": "^1.1.10",
+    "@radix-ui/react-toggle-group": "^1.1.11",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.6.0",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^0.562.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.0",
+    "react-day-picker": "^9.13.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.70.0",
+    "react-resizable-panels": "^4.2.2",
+    "react-router": "^7.6.1",
+    "recharts": "^2.15.4",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.4.0",
+    "vaul": "^1.1.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/ui": "^5.0.5",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "jsdom": "^30.1.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4",
+    "vitest": "^5.0.5"
+  },
+  "description": "Lumini web client (prototype UI, mock data)"
+}
+
+
+==========================================================================================
+FILE: README.md
+==========================================================================================
+# Lumini web client
+
+AI-powered business mentor and business-intelligence platform. This package is the **web client**.
+
+> **Status: prototype (Stage 0 complete).** The interface is built, but all data is mock data held in
+> `src/data/mock-data.ts` and browser `localStorage`. There is no backend, authentication, database,
+> real AI, or real financial engine yet. See the build plan in the project docs for what comes next.
+
+## Run
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+npm run build      # type-check + production build
+npm run lint
+```
+
+Requires Node.js 20+.
+
+## Structure
+
+```
+src/
+  App.tsx                 Route table
+  main.tsx                Entry point (BrowserRouter)
+  config/navigation.ts    Route paths, nav items, titles
+  context/                Workspace state shared by all views (prototype)
+  components/app/         Layout, sidebar, top bar, modals
+  components/ui/          shadcn/ui primitives (mostly unused so far)
+  views/                  One file per screen
+  data/mock-data.ts       ALL sample data - delete entries as real data replaces them
+  types/                  Shared TypeScript types
+  lib/                    Small utilities
+```
+
+## Routes
+
+| Path | Screen |
+|---|---|
+| `/` | Overview |
+| `/mentor` | Ask Lumini |
+| `/business` | My business |
+| `/finances` | Finances |
+| `/plans` | Plans & actions |
+| `/insights` | Insights |
+| `/settings` | Settings |
+
+## Known prototype limits
+
+- The mentor chat returns keyword-matched canned replies.
+- Financial maths runs in the browser using floating point (replaced in Stage 2 by a tested decimal engine).
+- Health score, trends, forecast shape, notifications and reports are fabricated.
+- Settings toggles do not change behaviour.
+
+
+==========================================================================================
+FILE: vite.config.ts
+==========================================================================================
+import path from "path"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
+
+export default defineConfig({
+  base: '/',
+  plugins: [react()],
+  server: {
+    port: 3000,
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['lucide-react'],
+          charts: ['recharts'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
+});
+
+
+==========================================================================================
+FILE: vitest.config.ts
+==========================================================================================
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: [],
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+
+
+==========================================================================================
+FILE: .gitignore
+==========================================================================================
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+==========================================================================================
+FILE: .github/workflows/ci.yml
+==========================================================================================
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm audit --audit-level=moderate
+
+
+==========================================================================================
+FILE: database/migrations/001_initial_schema.sql
+==========================================================================================
+# Migration: 001_initial_schema
+# Lumini Database Schema - Phase 1 Foundation
+
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  display_name VARCHAR(255),
+  password_hash VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  status VARCHAR(50) DEFAULT 'active'
+);
+
+CREATE TABLE organizations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  plan VARCHAR(50) DEFAULT 'free',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  settings_json JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE TABLE organization_members (
+  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(50) NOT NULL CHECK (role IN ('owner', 'admin', 'finance', 'manager', 'adviser', 'read-only')),
+  status VARCHAR(50) DEFAULT 'active',
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (organization_id, user_id)
+);
+
+CREATE TABLE businesses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  industry VARCHAR(100),
+  stage VARCHAR(50),
+  business_model VARCHAR(100),
+  location_or_service_area VARCHAR(255),
+  base_currency VARCHAR(3) DEFAULT 'KES',
+  timezone VARCHAR(50) DEFAULT 'Africa/Nairobi',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  archived_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_businesses_org ON businesses(organization_id);
+CREATE INDEX idx_org_members_user ON organization_members(user_id);
+CREATE INDEX idx_org_members_org ON organization_members(organization_id);
+
+
+==========================================================================================
+FILE: infra/environments/.env.development.example
+==========================================================================================
+# Environment Configuration
+# Development
+
+NODE_ENV=development
+API_URL=http://localhost:3000/api
+DATABASE_URL=postgresql://localhost:5432/lumini_dev
+REDIS_URL=redis://localhost:6379
+LOG_LEVEL=debug
+
+# Security
+SESSION_SECRET=dev_secret_change_in_production
+JWT_SECRET=dev_jwt_secret_change_in_production
+
+# Features
+ENABLE_EXTERNAL_RESEARCH=false
+ENABLE_AI_FEATURES=false
+MOCK_DATA=true
+
+
+==========================================================================================
+FILE: infra/environments/.env.staging.example
+==========================================================================================
+# Environment Configuration
+# Staging
+
+NODE_ENV=staging
+API_URL=https://staging-api.lumini.app
+DATABASE_URL=${DATABASE_URL}
+REDIS_URL=${REDIS_URL}
+LOG_LEVEL=info
+
+# Security
+SESSION_SECRET=${SESSION_SECRET}
+JWT_SECRET=${JWT_SECRET}
+
+# Features
+ENABLE_EXTERNAL_RESEARCH=true
+ENABLE_AI_FEATURES=true
+MOCK_DATA=false
+
+
+==========================================================================================
+FILE: infra/environments/.env.production.example
+==========================================================================================
+# Environment Configuration
+# Production
+
+NODE_ENV=production
+API_URL=https://api.lumini.app
+DATABASE_URL=${DATABASE_URL}
+REDIS_URL=${REDIS_URL}
+LOG_LEVEL=warn
+
+# Security
+SESSION_SECRET=${SESSION_SECRET}
+JWT_SECRET=${JWT_SECRET}
+
+# Features
+ENABLE_EXTERNAL_RESEARCH=true
+ENABLE_AI_FEATURES=true
+MOCK_DATA=false
+
+# Monitoring
+SENTRY_DSN=${SENTRY_DSN}
+POSTHOG_KEY=${POSTHOG_KEY}
+
+
+==========================================================================================
+FILE: src/App.tsx
+==========================================================================================
+import { Navigate, Route, Routes } from 'react-router'
+import { Suspense, lazy } from 'react'
+import { WorkspaceProvider } from '@/context/WorkspaceProvider'
+import { Layout } from '@/components/app/Layout'
+import AuthView from '@/views/AuthView'
+import { routePaths } from '@/config/navigation'
+import { useAuth } from '@/context/AuthContext'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import './App.css'
+
+const HomeView = lazy(() => import('@/views/HomeView'))
+const MentorView = lazy(() => import('@/views/MentorView'))
+const BusinessView = lazy(() => import('@/views/BusinessView'))
+const FinancesView = lazy(() => import('@/views/FinancesView'))
+const PlansView = lazy(() => import('@/views/PlansView'))
+const InsightsView = lazy(() => import('@/views/InsightsView'))
+const SettingsView = lazy(() => import('@/views/SettingsView'))
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />
+  }
+  return <>{children}</>
+}
+
+function LoadingFallback() {
+  return <div className="p-8 text-center">Loading...</div>
+}
+
+export default function App() {
+  const { isAuthenticated } = useAuth()
+  
+  return (
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/auth" element={isAuthenticated ? <Navigate to={routePaths.home} replace /> : <AuthView />} />
+        <Route element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <Layout />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }>
+          <Route index element={<Suspense fallback={<LoadingFallback />}><HomeView /></Suspense>} />
+          <Route path={routePaths.mentor} element={<Suspense fallback={<LoadingFallback />}><MentorView /></Suspense>} />
+          <Route path={routePaths.business} element={<Suspense fallback={<LoadingFallback />}><BusinessView /></Suspense>} />
+          <Route path={routePaths.finances} element={<Suspense fallback={<LoadingFallback />}><FinancesView /></Suspense>} />
+          <Route path={routePaths.plans} element={<Suspense fallback={<LoadingFallback />}><PlansView /></Suspense>} />
+          <Route path={routePaths.insights} element={<Suspense fallback={<LoadingFallback />}><InsightsView /></Suspense>} />
+          <Route path={routePaths.settings} element={<Suspense fallback={<LoadingFallback />}><SettingsView /></Suspense>} />
+        </Route>
+        <Route path="*" element={<Navigate to={routePaths.home} replace />} />
+      </Routes>
+    </ErrorBoundary>
+  )
+}
+
+
+==========================================================================================
+FILE: src/main.tsx
+==========================================================================================
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router'
+import './index.css'
+import App from './App.tsx'
+import { AuthProvider } from './context/AuthContext.tsx'
+import { OrganizationProvider } from './context/OrganizationContext.tsx'
+import { AuditProvider } from './context/AuditContext.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <OrganizationProvider>
+          <AuditProvider>
+            <App />
+          </AuditProvider>
+        </OrganizationProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </StrictMode>,
+)
+
+
+==========================================================================================
+FILE: src/types/index.ts
+==========================================================================================
+export type View = 'home' | 'mentor' | 'business' | 'finances' | 'plans' | 'insights' | 'settings'
+
+export type User = {
+  id: string
+  email: string
+  displayName: string
+  firstName?: string
+  initials?: string
+  role?: string
+}
+
+export type AuthState = {
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
+}
+
+export type Organization = {
+  id: string
+  name: string
+  plan: 'free' | 'plus' | 'growth' | 'enterprise'
+  createdAt: string
+}
+
+export type OrganizationMember = {
+  organizationId: string
+  userId: string
+  role: 'owner' | 'admin' | 'finance' | 'manager' | 'adviser' | 'read-only'
+  status: 'active' | 'invited' | 'suspended'
+}
+
+export type EvidenceType = 'user_reported' | 'imported_record' | 'externally_verified' | 'calculated' | 'model_estimate' | 'assumption' | 'unknown'
+
+export type EvidenceClaim = {
+  id: string
+  claimType: EvidenceType
+  text: string
+  value?: unknown
+  source?: string
+  observedAt?: string
+  confidence?: 'low' | 'medium' | 'high'
+  expiresAt?: string
+}
+
+export type Action = {
+  id: number
+  title: string
+  area: string
+  due: string
+  done: boolean
+  impact: string
+  reason?: string
+  successMetric?: string
+  baselineValue?: number
+  targetValue?: number
+  actualOutcome?: string
+  completedAt?: string
+  followUpDate?: string
+  owner?: string
+  estimatedCost?: number
+  expectedResult?: string
+  risk?: string
+  relatedDecisionId?: string
+}
+
+export type Message = {
+  id: number
+  from: 'lumini' | 'user'
+  text: string
+  detail?: string
+  evidence?: EvidenceClaim[]
+  assumptions?: string[]
+  calculations?: Array<{ label: string; value: string; formula?: string }>
+  recommendations?: Array<{ title: string; why: string; firstAction?: string }>
+  confidence?: 'low' | 'medium' | 'high'
+}
+
+export type Finance = {
+  revenue: number
+  direct: number
+  expenses: number
+  price: number
+  variable: number
+  fixed: number
+}
+
+export type Business = {
+  name: string
+  industry: string
+  stage: string
+  location: string
+  customers: string
+  model: string
+  goal: string
+}
+
+export type Settings = {
+  weekly: boolean
+  actions: boolean
+  research: boolean
+  guided: boolean
+}
+
+export type CashPoint = {
+  month: string
+  actual: number | null
+  forecast: number
+}
+
+export type BusinessProfile = {
+  completeness: number
+  goals: string[]
+  constraints: string[]
+  customerSegments: string[]
+  productsServices: string[]
+  hasCollectionPeriod: boolean
+  lastReviewedAt?: string
+}
+
+export type QuestionnaireQuestion = {
+  id: string
+  prompt: string
+  whyItMatters: string
+  type: 'currency' | 'number' | 'percentage' | 'text' | 'select' | 'multiselect' | 'yesno'
+  requiredFor?: string[]
+  options?: string[]
+  branchConditions?: Record<string, string[]>
+}
+
+export type QuestionnaireSession = {
+  id: string
+  businessId: string
+  status: 'in_progress' | 'completed'
+  answers: Record<string, unknown>
+  startedAt: string
+  completedAt?: string
+}
+
+export type HealthScore = {
+  overall: number
+  breakdown: {
+    cash: number
+    margin: number
+    actions: number
+    pipeline: number
+  }
+  level: 'critical' | 'needs-attention' | 'ok' | 'good'
+  recommendations: string[]
+}
+
+export type TrendPoint = {
+  month: string
+  revenue: number
+  expenses: number
+  gross: number
+}
+
+export type Notification = {
+  id: string
+  type: 'warning' | 'info' | 'success'
+  title: string
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+
+
+==========================================================================================
+FILE: src/context/AuthContext.tsx
+==========================================================================================
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import type { AuthState, User } from '@/types'
+
+type AuthContextType = AuthState & {
+  login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string, displayName: string) => Promise<void>
+  logout: () => void
+  updateUser: (updates: Partial<User>) => void
+}
+
+const AuthContext = createContext<AuthContextType | null>(null)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+  })
+
+  const login = useCallback(async (email: string, _password: string) => {
+    setAuthState({ user: null, isAuthenticated: false, isLoading: true })
+    // Mock auth - replace with real API call
+    await new Promise(resolve => setTimeout(resolve, 500))
+    const user: User = {
+      id: 'usr_' + Date.now(),
+      email,
+      displayName: email.split('@')[0],
+      firstName: email.split('@')[0].split('.')[0],
+      initials: email.substring(0, 2).toUpperCase(),
+      role: 'owner',
+    }
+    setAuthState({ user, isAuthenticated: true, isLoading: false })
+    localStorage.setItem('lumini_auth', JSON.stringify(user))
+  }, [])
+
+  const signup = useCallback(async (email: string, _password: string, displayName: string) => {
+    setAuthState({ user: null, isAuthenticated: false, isLoading: true })
+    await new Promise(resolve => setTimeout(resolve, 500))
+    const user: User = {
+      id: 'usr_' + Date.now(),
+      email,
+      displayName,
+      firstName: displayName.split(' ')[0],
+      initials: displayName.substring(0, 2).toUpperCase(),
+      role: 'owner',
+    }
+    setAuthState({ user, isAuthenticated: true, isLoading: false })
+    localStorage.setItem('lumini_auth', JSON.stringify(user))
+  }, [])
+
+  const logout = useCallback(() => {
+    setAuthState({ user: null, isAuthenticated: false, isLoading: false })
+    localStorage.removeItem('lumini_auth')
+  }, [])
+
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setAuthState(prev => {
+      if (!prev.user) return prev
+      const updated = { ...prev.user, ...updates }
+      localStorage.setItem('lumini_auth', JSON.stringify(updated))
+      return { ...prev, user: updated }
+    })
+  }, [])
+
+  // Restore session from localStorage
+  useState(() => {
+    try {
+      const stored = localStorage.getItem('lumini_auth')
+      if (stored) {
+        const user = JSON.parse(stored)
+        setAuthState({ user, isAuthenticated: true, isLoading: false })
+      }
+    } catch {}
+  })
+
+  return (
+    <AuthContext.Provider value={{ ...authState, login, signup, logout, updateUser }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')
+  return ctx
+}
+
+
+==========================================================================================
+FILE: src/context/OrganizationContext.tsx
+==========================================================================================
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import type { Organization, OrganizationMember } from '@/types'
+import { useAuth } from './AuthContext'
+
+type OrgContextType = {
+  organization: Organization | null
+  members: OrganizationMember[]
+  isLoading: boolean
+  createOrganization: (name: string) => Promise<void>
+  inviteMember: (email: string, role: OrganizationMember['role']) => Promise<void>
+  switchOrganization: (orgId: string) => void
+}
+
+const OrgContext = createContext<OrgContextType | null>(null)
+
+export function OrganizationProvider({ children }: { children: ReactNode }) {
+  const { user, isAuthenticated } = useAuth()
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [members, setMembers] = useState<OrganizationMember[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (isAuthenticated && user && !organization) {
+      // Create default org for user
+      const defaultOrg: Organization = {
+        id: 'org_' + Date.now(),
+        name: user.displayName + "'s Business",
+        plan: 'free',
+        createdAt: new Date().toISOString(),
+      }
+      setOrganization(defaultOrg)
+      setMembers([{
+        organizationId: defaultOrg.id,
+        userId: user.id,
+        role: 'owner',
+        status: 'active',
+      }])
+      localStorage.setItem('lumini_org', JSON.stringify(defaultOrg))
+    }
+  }, [isAuthenticated, user, organization])
+
+  const createOrganization = useCallback(async (name: string) => {
+    setIsLoading(true)
+    await new Promise(r => setTimeout(r, 300))
+    const org: Organization = {
+      id: 'org_' + Date.now(),
+      name,
+      plan: 'free',
+      createdAt: new Date().toISOString(),
+    }
+    setOrganization(org)
+    if (user) {
+      setMembers([{
+        organizationId: org.id,
+        userId: user.id,
+        role: 'owner',
+        status: 'active',
+      }])
+    }
+    localStorage.setItem('lumini_org', JSON.stringify(org))
+    setIsLoading(false)
+  }, [user])
+
+  const inviteMember = useCallback(async (email: string, role: OrganizationMember['role']) => {
+    setIsLoading(true)
+    await new Promise(r => setTimeout(r, 300))
+    // Mock invitation
+    console.log('Invited', email, 'as', role)
+    setIsLoading(false)
+  }, [])
+
+  const switchOrganization = useCallback((orgId: string) => {
+    console.log('Switch to org', orgId)
+  }, [])
+
+  return (
+    <OrgContext.Provider value={{ organization, members, isLoading, createOrganization, inviteMember, switchOrganization }}>
+      {children}
+    </OrgContext.Provider>
+  )
+}
+
+export function useOrganization() {
+  const ctx = useContext(OrgContext)
+  if (!ctx) throw new Error('useOrganization must be used inside <OrganizationProvider>')
+  return ctx
+}
+
+
+==========================================================================================
+FILE: src/context/AuditContext.tsx
+==========================================================================================
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+
+export type AuditEvent = {
+  id: string
+  organizationId: string
+  actorUserId: string
+  action: string
+  resourceType: string
+  resourceId?: string
+  timestamp: string
+  metadata?: Record<string, any>
+}
+
+type AuditContextType = {
+  events: AuditEvent[]
+  logEvent: (event: Omit<AuditEvent, 'id' | 'timestamp'>) => void
+  getEvents: (filters?: Partial<AuditEvent>) => AuditEvent[]
+}
+
+const AuditContext = createContext<AuditContextType | null>(null)
+
+export function AuditProvider({ children }: { children: ReactNode }) {
+  const [events, setEvents] = useState<AuditEvent[]>([])
+
+  const logEvent = useCallback((event: Omit<AuditEvent, 'id' | 'timestamp'>) => {
+    const newEvent: AuditEvent = {
+      ...event,
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+    }
+    setEvents(prev => [newEvent, ...prev])
+    console.log('[AUDIT]', newEvent.action, newEvent.resourceType)
+  }, [])
+
+  const getEvents = useCallback((filters?: Partial<AuditEvent>) => {
+    if (!filters) return events
+    return events.filter(e => {
+      return Object.entries(filters).every(([key, value]) => e[key as keyof AuditEvent] === value)
+    })
+  }, [events])
+
+  return (
+    <AuditContext.Provider value={{ events, logEvent, getEvents }}>
+      {children}
+    </AuditContext.Provider>
+  )
+}
+
+export function useAudit() {
+  const ctx = useContext(AuditContext)
+  if (!ctx) throw new Error('useAudit must be used inside <AuditProvider>')
+  return ctx
+}
+
+
+==========================================================================================
+FILE: src/context/workspace-context.ts
+==========================================================================================
+import { createContext, useContext } from 'react'
+import type { Action, Business, CashPoint, Finance, Message, Settings, EvidenceClaim } from '@/types'
+
+export type WorkspaceState = {
+  // state
+  actions: Action[]
+  finance: Finance
+  messages: Message[]
+  business: Business
+  settings: Settings
+  chatLoading: boolean
+  // setters
+  setFinance: React.Dispatch<React.SetStateAction<Finance>>
+  setBusiness: React.Dispatch<React.SetStateAction<Business>>
+  setSettings: React.Dispatch<React.SetStateAction<Settings>>
+  setActions: React.Dispatch<React.SetStateAction<Action[]>>
+  // derived
+  completed: number
+  gross: number
+  margin: number
+  operating: number
+  contribution: number
+  breakEven: number
+  cashData: CashPoint[]
+  // commands
+  toggleAction: (id: number) => void
+  removeAction: (id: number) => void
+  addAction: (title: string, opts?: Partial<Action>) => void
+  addSuggestedAction: () => void
+  sendMessage: (text: string) => void
+  exportCSV: () => void
+  restoreDemo: () => void
+  showToast: (message: string) => void
+  // new-action modal
+  newActionOpen: boolean
+  newActionTitle: string
+  setNewActionTitle: (title: string) => void
+  openNewAction: (title?: string) => void
+  closeNewAction: () => void
+  submitNewAction: () => void
+  // explainability
+  getEvidenceForMessage: (messageId: number) => EvidenceClaim[]
+  // phase 4
+  exportPDF: () => void
+  exportJSON: () => void
+  generateReport: () => string
+}
+
+export const WorkspaceContext = createContext<WorkspaceState | null>(null)
+
+export function useWorkspace(): WorkspaceState {
+  const ctx = useContext(WorkspaceContext)
+  if (!ctx) throw new Error('useWorkspace must be used inside <WorkspaceProvider>')
+  return ctx
+}
+
+
+==========================================================================================
+FILE: src/context/WorkspaceProvider.tsx
+==========================================================================================
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { WorkspaceContext, type WorkspaceState } from './workspace-context'
+import { money } from '@/lib/format'
+import {
+  initialActions,
+  initialMessages,
+  mockCashShape,
+  seedBusiness,
+  seedFinance,
+  seedSettings,
+} from '@/data/mock-data'
+import type { Action, Business, CashPoint, Finance, Message, Settings } from '@/types'
+import {
+  breakEvenUnits,
+  contributionPerUnit,
+  grossMargin,
+  grossProfit,
+  operatingResult,
+} from '@/lib/financial-engine'
+import { retrieveRelevantKnowledge } from '@/lib/knowledge-base'
+import { researchConnector } from '@/lib/research-connector'
+import { useAudit } from './AuditContext'
+import { useAuth } from './AuthContext'
+import { useOrganization } from './OrganizationContext'
+
+const loadJSON = <T,>(key: string, fallback: T): T => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || 'null') || fallback
+  } catch {
+    return fallback
+  }
+}
+
+export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const { logEvent } = useAudit()
+  const { user } = useAuth()
+  const { organization } = useOrganization()
+  void researchConnector
+  void logEvent
+  void user
+  void organization
+  const [actions, setActions] = useState<Action[]>(() => loadJSON('lumini-actions', initialActions))
+  const [finance, setFinance] = useState<Finance>(() => loadJSON('lumini-finance', seedFinance))
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [business, setBusiness] = useState<Business>(seedBusiness)
+  const [settings, setSettings] = useState<Settings>(seedSettings)
+  const [chatLoading, setChatLoading] = useState(false)
+  const [toast, setToast] = useState('')
+  const [newActionOpen, setNewActionOpen] = useState(false)
+  const [newActionTitle, setNewActionTitle] = useState('')
+
+  useEffect(() => { localStorage.setItem('lumini-actions', JSON.stringify(actions)) }, [actions])
+  useEffect(() => { localStorage.setItem('lumini-finance', JSON.stringify(finance)) }, [finance])
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(''), 2800)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const completed = actions.filter(a => a.done).length
+  const gross = grossProfit(finance.revenue, finance.direct)
+  const margin = grossMargin(finance.revenue, finance.direct)
+  const operating = operatingResult(finance.revenue, finance.direct, finance.expenses)
+  const contribution = contributionPerUnit(finance.price, finance.variable)
+  const breakEvenRes = breakEvenUnits(finance.fixed, contribution)
+  const breakEven = breakEvenRes.units
+  const cashData: CashPoint[] = [...mockCashShape]
+
+  const toggleAction = useCallback((id: number) => {
+    setActions(prev => prev.map(a => a.id === id ? { ...a, done: !a.done } : a))
+    setToast('Action updated')
+  }, [])
+
+  const removeAction = useCallback((id: number) => {
+    setActions(prev => prev.filter(a => a.id !== id))
+    setToast('Action removed')
+  }, [])
+
+  const addAction = useCallback((title: string, opts?: Partial<Action>) => {
+    if (!title.trim()) return
+    const a: Action = { id: Date.now(), title: title.trim(), area: opts?.area || 'General', due: opts?.due || new Date(Date.now()+86400000).toISOString().slice(0,10), done: false, impact: opts?.impact || 'medium', ...opts }
+    setActions(prev => [a,...prev])
+    setNewActionOpen(false)
+    setNewActionTitle('')
+    setToast('Action added')
+  }, [])
+
+  const addSuggestedAction = useCallback(() => {
+    addAction('Review unit economics', { area: 'Finance', impact: 'high' })
+  }, [addAction])
+
+  const openNewAction = useCallback((title?: string) => { if (title) setNewActionTitle(title); setNewActionOpen(true) }, [])
+  const closeNewAction = useCallback(() => setNewActionOpen(false), [])
+  const submitNewAction = useCallback(() => { addAction(newActionTitle); setNewActionTitle('') }, [addAction, newActionTitle])
+
+  const showToast = useCallback((message: string) => setToast(message), [])
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim()) return
+    const userMsg: Message = { id: Date.now(), from: 'user', text: text.trim() }
+    setMessages(m => [...m, userMsg])
+    setChatLoading(true)
+    try {
+      const kb = retrieveRelevantKnowledge(text, business.stage)
+      const needsResearch = /market|competitor|price|regulation|funding|trend/i.test(text)
+      let researchSummary = ''
+      if (needsResearch) {
+        try {
+          const r = await researchConnector.research(text, { business, finance, actions })
+          researchSummary = r.summary
+        } catch {}
+      }
+      const advice: string[] = []
+      if (finance.price > 0 && finance.variable >= finance.price) advice.push('Your variable cost is >= price — review pricing/margins.')
+      if (finance.expenses > 0 && operating < 0) advice.push('Operating result negative — focus on cost control.')
+      if (kb.length) advice.push(`Relevant playbook: ${kb[0].title}.`)
+      if (researchSummary) advice.push(`Market intel: ${researchSummary}`)
+      const reply: Message = { 
+        id: Date.now()+1, 
+        from: 'lumini', 
+        text: advice.length ? advice.join(' ') : 'Good question. Focus on validation, unit economics, and a 90-day plan. I can build a specific checklist for your next step.',
+        evidence: researchSummary ? [{ id: String(Date.now()), claimType: 'externally_verified', text: 'Market research', source: 'research', confidence: 'medium' }] : (kb[0] ? [{ id: String(Date.now()), claimType: 'model_estimate', text: kb[0].title, source: 'kb', confidence: 'high' }] : undefined),
+        assumptions: finance.price===0 ? ['Price not set'] : undefined,
+        calculations: [
+          { label: 'Gross profit', value: money(gross) },
+          { label: 'Gross margin', value: `${(margin*100).toFixed(1)}%` },
+          { label: 'Operating result', value: money(operating) },
+          { label: 'Contribution/unit', value: money(contribution) },
+          { label: 'Break-even units', value: String(breakEven) },
+        ]
+      }
+      setMessages(m => [...m, reply])
+    } finally {
+      setChatLoading(false)
+    }
+  }, [business, finance, actions, gross, margin, operating, contribution, breakEven])
+
+  const exportCSV = useCallback(() => {
+    const header = 'id,title,area,due,done,impact\n'
+    const body = actions.map(a => `${a.id},"${a.title}",${a.area},${a.due},${a.done},${a.impact}`).join('\n')
+    const blob = new Blob([header+body], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'lumini-actions.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+    showToast('CSV exported')
+  }, [actions, showToast])
+
+  const exportJSON = useCallback(() => {
+    const data = { business, finance, actions, messages }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'lumini-export.json'
+    link.click()
+    URL.revokeObjectURL(url)
+    showToast('JSON exported')
+  }, [business, finance, actions, messages, showToast])
+
+  const exportPDF = useCallback(() => {
+    const content = `Lumini Report\n\nBusiness: ${business.name}\nRevenue: ${finance.revenue}\nGross Profit: ${gross}\nGross Margin: ${(margin*100).toFixed(1)}%\nOperating Result: ${operating}\nBreak-even units: ${breakEven}\n\nActions: ${actions.length} (${completed} completed)\n`
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'lumini-report.txt'
+    link.click()
+    URL.revokeObjectURL(url)
+    showToast('Report exported')
+  }, [business, finance, gross, margin, operating, breakEven, actions.length, completed, showToast])
+
+  const generateReport = useCallback(() => {
+    return `# Lumini Business Report\n\n## Business\n- Name: ${business.name}\n- Industry: ${business.industry}\n- Stage: ${business.stage}\n\n## Financials\n- Revenue: ${money(finance.revenue)}\n- Direct Costs: ${money(finance.direct)}\n- Gross Profit: ${money(gross)}\n- Gross Margin: ${(margin*100).toFixed(1)}%\n- Operating Expenses: ${money(finance.expenses)}\n- Operating Result: ${money(operating)}\n- Break-even Units: ${breakEven}\n\n## Actions\n- Total: ${actions.length}\n- Completed: ${completed}\n- Completion Rate: ${actions.length ? Math.round((completed/actions.length)*100) : 0}%\n`
+  }, [business, finance, gross, margin, operating, breakEven, actions.length, completed])
+
+  const restoreDemo = useCallback(() => {
+    setActions(initialActions)
+    setFinance(seedFinance)
+    setBusiness(seedBusiness)
+    setMessages(initialMessages)
+    setSettings(seedSettings)
+    showToast('Demo restored')
+  }, [showToast])
+
+  const getEvidenceForMessage = useCallback((messageId: number) => {
+    const m = messages.find(msg => msg.id === messageId)
+    return m?.evidence || []
+  }, [messages])
+
+  const value: WorkspaceState = useMemo(() => ({
+    actions, finance, messages, business, settings, chatLoading,
+    setFinance, setBusiness, setSettings, setActions,
+    completed, gross, margin, operating, contribution, breakEven, cashData,
+    toggleAction, removeAction, addAction, addSuggestedAction, sendMessage, exportCSV, restoreDemo, showToast,
+    newActionOpen, newActionTitle, setNewActionTitle, openNewAction, closeNewAction, submitNewAction,
+    getEvidenceForMessage, exportPDF, exportJSON, generateReport,
+  }), [actions, finance, messages, business, settings, chatLoading, completed, gross, margin, operating, contribution, breakEven, cashData, toggleAction, removeAction, addAction, addSuggestedAction, sendMessage, exportCSV, restoreDemo, showToast, newActionOpen, newActionTitle, openNewAction, closeNewAction, submitNewAction, getEvidenceForMessage, exportPDF, exportJSON, generateReport])
+
+  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>
+}
+
+
+==========================================================================================
+FILE: src/lib/api/client.ts
+==========================================================================================
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    credentials: 'include',
+    ...options,
+  })
+  if (!res.ok) {
+    throw new ApiError(res.statusText, res.status)
+  }
+  return res.json()
+}
+
+export const api = {
+  get: <T>(path: string) => request<T>(path),
+  post: <T>(path: string, body: any) => request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  put: <T>(path: string, body: any) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+}
+
+
+==========================================================================================
+FILE: src/lib/research-connector/index.ts
+==========================================================================================
+export type ResearchSource = {
+  id: string
+  url: string
+  title: string
+  publisher: string
+  publishedAt?: string
+  retrievedAt: string
+  reliability: 'high' | 'medium' | 'low' | 'unknown'
+  contentHash?: string
+}
+
+export type ResearchResult = {
+  query: string
+  sources: ResearchSource[]
+  summary: string
+  keyFindings: string[]
+  gaps: string[]
+  confidence: 'high' | 'medium' | 'low'
+  retrievedAt: string
+}
+
+export class ResearchConnector {
+  private enabled: boolean = false
+
+  constructor(enabled: boolean = false) {
+    this.enabled = enabled
+  }
+
+  async research(query: string, _context?: any): Promise<ResearchResult> {
+    if (!this.enabled) {
+      return {
+        query,
+        sources: [],
+        summary: 'External research is disabled. Using internal knowledge only.',
+        keyFindings: [],
+        gaps: ['Current market data not available (research disabled)'],
+        confidence: 'low',
+        retrievedAt: new Date().toISOString(),
+      }
+    }
+
+    // Mock research - replace with real API
+    await new Promise(r => setTimeout(r, 1000))
+    return {
+      query,
+      sources: [
+        {
+          id: 'src_' + Date.now(),
+          url: 'https://example.com/market-data',
+          title: 'Market Analysis Report',
+          publisher: 'Industry Research Co.',
+          publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          retrievedAt: new Date().toISOString(),
+          reliability: 'medium',
+        },
+      ],
+      summary: 'Market conditions show moderate competition with opportunities in underserved segments.',
+      keyFindings: [
+        'Competition is moderate in this sector',
+        'Pricing sensitivity varies by segment',
+        'Digital channels growing in importance',
+      ],
+      gaps: ['Local/regional specifics need verification'],
+      confidence: 'medium',
+      retrievedAt: new Date().toISOString(),
+    }
+  }
+
+  setEnabled(enabled: boolean) {
+    this.enabled = enabled
+  }
+
+  isEnabled(): boolean {
+    return this.enabled
+  }
+}
+
+export const researchConnector = new ResearchConnector(false)
+
+
+==========================================================================================
+FILE: src/lib/knowledge-base/index.ts
+==========================================================================================
+export type KnowledgeItem = {
+  id: string
+  title: string
+  body: string
+  category: 'finance' | 'sales' | 'operations' | 'strategy' | 'starting'
+  applicability: string[]
+  limitations?: string
+  version: string
+  reviewedAt: string
+}
+
+export const knowledgeBase: KnowledgeItem[] = [
+  {
+    id: 'kb-cashflow',
+    title: 'Profit vs Cash Flow',
+    body: 'Profit and cash movement are not the same. Revenue is recorded when earned, cash when received. Expenses may be paid before or after they are recorded. Growth can strain cash even if profitable.',
+    category: 'finance',
+    applicability: ['Established', 'Growing', 'Early'],
+    limitations: 'General principle - timing depends on payment terms',
+    version: '1.0',
+    reviewedAt: '2026-10-01',
+  },
+  {
+    id: 'kb-breakeven',
+    title: 'Break-even Analysis',
+    body: 'Break-even units = Fixed costs / (Selling price - Variable cost per unit). Round up to whole units. If contribution per unit is negative, break-even is not achievable at current pricing.',
+    category: 'finance',
+    applicability: ['Starting', 'Early', 'Established', 'Growing'],
+    version: '1.0',
+    reviewedAt: '2026-10-01',
+  },
+  {
+    id: 'kb-validation',
+    title: 'Validate Before Committing',
+    body: 'Test demand with the smallest reversible commitment: customer conversations, pre-orders, or a pilot. Measure actual conversion, not interest.',
+    category: 'starting',
+    applicability: ['Idea', 'Starting'],
+    version: '1.0',
+    reviewedAt: '2026-10-01',
+  },
+]
+
+export function retrieveRelevantKnowledge(query: string, businessStage?: string): KnowledgeItem[] {
+  const lower = query.toLowerCase()
+  return knowledgeBase.filter(item => {
+    const matchesQuery = item.title.toLowerCase().includes(lower) || item.body.toLowerCase().includes(lower)
+    const matchesStage = !businessStage || item.applicability.includes(businessStage)
+    return matchesQuery && matchesStage
+  })
+}
+
+
+==========================================================================================
+FILE: src/lib/playbooks/index.ts
+==========================================================================================
+export type Playbook = {
+  id: string
+  title: string
+  symptoms: string[]
+  questions: string[]
+  diagnosticSteps: string[]
+  recommendations: string[]
+  requiredInputs: string[]
+}
+
+export const diagnosticPlaybooks: Playbook[] = [
+  {
+    id: 'pb-low-profit',
+    title: 'Low Profit',
+    symptoms: ['Margins are thin', 'Working hard but not profitable', 'Revenue up but profit down'],
+    questions: ['What are your gross margins by product/service?', 'Are direct costs accurate?', 'Have prices changed recently?'],
+    diagnosticSteps: ['Calculate gross margin', 'Review pricing vs costs', 'Check for cost creep'],
+    recommendations: ['Review pricing strategy', 'Reduce direct costs', 'Focus on higher-margin products'],
+    requiredInputs: ['revenue', 'direct_costs', 'operating_expenses'],
+  },
+  {
+    id: 'pb-cash-shortage',
+    title: 'Cash-flow Shortage',
+    symptoms: ['Cannot pay suppliers', 'Running out of cash', 'Paying late'],
+    questions: ['When do customers pay vs when do you pay suppliers?', 'Do you have outstanding receivables?', 'Any large upcoming expenses?'],
+    diagnosticSteps: ['Map cash timing', 'Review receivables/payables', 'Identify cash gap'],
+    recommendations: ['Improve collection', 'Negotiate payment terms', 'Cut non-essential expenses'],
+    requiredInputs: ['revenue', 'cash_timing'],
+  },
+  {
+    id: 'pb-pricing',
+    title: 'Pricing & Break-even',
+    symptoms: ['Unsure if profitable', 'Competitors cheaper', 'Need to raise prices'],
+    questions: ['What is your break-even volume?', 'Is demand price-sensitive?', 'What is your minimum viable price?'],
+    diagnosticSteps: ['Calculate contribution margin', 'Find break-even point', 'Test price sensitivity'],
+    recommendations: ['Raise prices if margin is thin', 'Focus on value-add', 'Reduce variable costs'],
+    requiredInputs: ['price', 'variable_cost', 'fixed_costs'],
+  },
+  {
+    id: 'pb-sales-slow',
+    title: 'Sales Are Not Growing',
+    symptoms: ['Flat sales', 'Few new customers', 'Low conversion'],
+    questions: ['Where are leads dropping off?', 'Who is your ideal customer?', 'What value proposition resonates?'],
+    diagnosticSteps: ['Review sales funnel', 'Talk to customers', 'Analyze acquisition channels'],
+    recommendations: ['Improve conversion', 'Refine target market', 'Test offers'],
+    requiredInputs: ['customers', 'sales_channel'],
+  },
+]
+
+export function matchPlaybook(symptoms: string[]): Playbook | null {
+  const lower = symptoms.map(s => s.toLowerCase())
+  for (const pb of diagnosticPlaybooks) {
+    if (pb.symptoms.some(s => lower.some(l => l.includes(s.toLowerCase()) || s.toLowerCase().includes(l)))) {
+      return pb
+    }
+  }
+  return null
+}
+
+
+==========================================================================================
+FILE: src/lib/questionnaire-engine/index.ts
+==========================================================================================
+export type Question = {
+  id: string
+  prompt: string
+  whyItMatters: string
+  type: 'currency' | 'number' | 'percentage' | 'text' | 'select' | 'multiselect' | 'yesno'
+  options?: string[]
+  required?: boolean
+  applicableStages?: string[]
+  applicableIndustries?: string[]
+  branchRules?: Array<{
+    condition: (answer: any) => boolean
+    nextQuestionId: string
+  }>
+}
+
+export const questionBank: Question[] = [
+  {
+    id: 'goal',
+    prompt: 'What is your primary goal right now?',
+    whyItMatters: 'This determines which questions come next.',
+    type: 'select',
+    options: ['Start a business', 'Improve an existing business', 'Grow/expand', 'Fix finances', 'Make a decision'],
+    required: true,
+  },
+  {
+    id: 'revenue',
+    prompt: 'What was your total revenue in the last completed period (e.g., last month)?',
+    whyItMatters: 'We need actuals to calculate margins and cash position.',
+    type: 'currency',
+    applicableStages: ['Established', 'Growing'],
+  },
+  {
+    id: 'direct_costs',
+    prompt: 'What were your direct costs for the same period?',
+    whyItMatters: 'Direct costs determine gross profit and margin.',
+    type: 'currency',
+    applicableStages: ['Established', 'Growing'],
+  },
+  {
+    id: 'operating_expenses',
+    prompt: 'What were your operating expenses for the same period?',
+    whyItMatters: 'Needed to calculate operating result.',
+    type: 'currency',
+    applicableStages: ['Established', 'Growing'],
+  },
+  {
+    id: 'cash_timing',
+    prompt: 'Do you have a cash timing issue (pay before you collect)?',
+    whyItMatters: 'Profit and cash are different - this affects recommendations.',
+    type: 'yesno',
+    applicableStages: ['Established', 'Growing', 'Early'],
+  },
+  {
+    id: 'startup_capital',
+    prompt: 'How much capital do you have available to start?',
+    whyItMatters: 'Determines feasibility and what you can test affordably.',
+    type: 'currency',
+    applicableStages: ['Idea', 'Starting'],
+  },
+]
+
+export class QuestionnaireEngine {
+  private answers: Record<string, any> = {}
+
+  getNextQuestion(currentQuestionId?: string): Question | null {
+    if (!currentQuestionId || Object.keys(this.answers).length === 0) {
+      return questionBank.find(q => q.id === 'goal') || null
+    }
+
+    const goal = this.answers.goal
+    if (goal === 'Start a business') {
+      if (this.answers.startup_capital === undefined) {
+        return questionBank.find(q => q.id === 'startup_capital') || null
+      }
+      return null
+    }
+    if (goal === 'Improve an existing business' || goal === 'Fix finances' || goal === 'Grow/expand') {
+      if (this.answers.revenue === undefined) return questionBank.find(q => q.id === 'revenue') || null
+      if (this.answers.direct_costs === undefined) return questionBank.find(q => q.id === 'direct_costs') || null
+      if (this.answers.operating_expenses === undefined) return questionBank.find(q => q.id === 'operating_expenses') || null
+      if (this.answers.cash_timing === undefined) return questionBank.find(q => q.id === 'cash_timing') || null
+      return null
+    }
+    return null
+  }
+
+  recordAnswer(questionId: string, answer: any): void {
+    this.answers[questionId] = answer
+  }
+
+  getAnswers(): Record<string, any> {
+    return { ...this.answers }
+  }
+
+  isComplete(): boolean {
+    const keys = Object.keys(this.answers)
+    if (keys.length === 0) return false
+    return this.getNextQuestion(keys[keys.length - 1]) === null
+  }
+}
+
+
+==========================================================================================
+FILE: src/lib/financial-engine/index.ts
+==========================================================================================
+/**
+ * Deterministic financial calculation engine for Lumini
+ * Uses decimal-safe arithmetic and explicit formulas as per blueprint
+ */
+
+export function grossProfit(revenue: number, directCosts: number): number {
+  return revenue - directCosts
+}
+
+export function grossMargin(revenue: number, directCosts: number): number {
+  if (revenue === 0) return 0
+  const gross = grossProfit(revenue, directCosts)
+  return (gross / revenue) * 100
+}
+
+export function contributionPerUnit(sellingPrice: number, variableCost: number): number {
+  return sellingPrice - variableCost
+}
+
+export function contributionMarginRatio(revenue: number, variableCosts: number): number {
+  if (revenue === 0) return 0
+  const contribution = revenue - variableCosts
+  return contribution / revenue
+}
+
+export function breakEvenUnits(fixedCosts: number, contributionPerUnitVal: number): {
+  units: number
+  feasible: boolean
+  warning?: string
+} {
+  if (contributionPerUnitVal <= 0) {
+    return {
+      units: 0,
+      feasible: false,
+      warning: 'Contribution per unit is zero or negative. Cannot break even with current pricing/costs.',
+    }
+  }
+  if (fixedCosts <= 0) {
+    return {
+      units: 0,
+      feasible: true,
+    }
+  }
+  const units = Math.ceil(fixedCosts / contributionPerUnitVal)
+  return {
+    units,
+    feasible: true,
+  }
+}
+
+export function breakEvenRevenue(fixedCosts: number, contributionMarginRatioVal: number): {
+  revenue: number
+  feasible: boolean
+  warning?: string
+} {
+  if (contributionMarginRatioVal <= 0) {
+    return {
+      revenue: 0,
+      feasible: false,
+      warning: 'Contribution margin ratio is zero or negative. Cannot break even with current structure.',
+    }
+  }
+  if (fixedCosts <= 0) {
+    return {
+      revenue: 0,
+      feasible: true,
+    }
+  }
+  const revenue = fixedCosts / contributionMarginRatioVal
+  return {
+    revenue,
+    feasible: true,
+  }
+}
+
+export function operatingResult(revenue: number, directCosts: number, operatingExpenses: number): number {
+  const gross = grossProfit(revenue, directCosts)
+  return gross - operatingExpenses
+}
+
+export function netCashMovement(cashInflows: number, cashOutflows: number): number {
+  return cashInflows - cashOutflows
+}
+
+export function cac(attributableSalesMarketingCost: number, newCustomersAcquired: number): {
+  cac: number
+  feasible: boolean
+  warning?: string
+} {
+  if (newCustomersAcquired <= 0) {
+    return {
+      cac: 0,
+      feasible: false,
+      warning: 'No new customers acquired in this period.',
+    }
+  }
+  return {
+    cac: attributableSalesMarketingCost / newCustomersAcquired,
+    feasible: true,
+  }
+}
+
+
+==========================================================================================
+FILE: src/lib/financial-engine/__tests__/index.test.ts
+==========================================================================================
+import { describe, expect, it } from 'vitest'
+import {
+  breakEvenRevenue,
+  breakEvenUnits,
+  cac,
+  contributionMarginRatio,
+  contributionPerUnit,
+  grossMargin,
+  grossProfit,
+  netCashMovement,
+  operatingResult,
+} from '../index'
+
+describe('Financial Engine', () => {
+  it('calculates gross profit correctly', () => {
+    expect(grossProfit(300000, 195000)).toBe(105000)
+  })
+
+  it('calculates gross margin correctly', () => {
+    expect(grossMargin(300000, 195000)).toBeCloseTo(35)
+  })
+
+  it('returns 0 margin when revenue is 0', () => {
+    expect(grossMargin(0, 100)).toBe(0)
+  })
+
+  it('calculates contribution per unit', () => {
+    expect(contributionPerUnit(2500, 1625)).toBe(875)
+  })
+
+  it('calculates contribution margin ratio', () => {
+    expect(contributionMarginRatio(300000, 195000)).toBeCloseTo(0.35)
+  })
+
+  it('calculates break even units with rounding up', () => {
+    const result = breakEvenUnits(75000, 875)
+    expect(result.feasible).toBe(true)
+    expect(result.units).toBe(86) // ceil(75000/875)
+  })
+
+  it('returns warning when contribution per unit is zero or negative', () => {
+    const result = breakEvenUnits(75000, 0)
+    expect(result.feasible).toBe(false)
+    expect(result.warning).toBeDefined()
+  })
+
+  it('calculates break even revenue', () => {
+    const result = breakEvenRevenue(75000, 0.35)
+    expect(result.feasible).toBe(true)
+    expect(result.revenue).toBeCloseTo(214285.71)
+  })
+
+  it('calculates operating result', () => {
+    expect(operatingResult(300000, 195000, 75000)).toBe(30000)
+  })
+
+  it('calculates net cash movement', () => {
+    expect(netCashMovement(100000, 80000)).toBe(20000)
+  })
+
+  it('calculates CAC', () => {
+    const result = cac(12000, 5)
+    expect(result.feasible).toBe(true)
+    expect(result.cac).toBe(2400)
+  })
+
+  it('returns warning when no new customers acquired', () => {
+    const result = cac(12000, 0)
+    expect(result.feasible).toBe(false)
+    expect(result.warning).toBeDefined()
+  })
+})
+
+
+==========================================================================================
+FILE: src/lib/health/index.ts
+==========================================================================================
+import type { Action, Finance } from '@/types'
+import type { HealthScore } from '@/types'
+
+export function computeHealthScore(finance: Finance, actions: Action[], cashMonths: number): HealthScore {
+  const gross = finance.revenue - finance.direct
+  const marginPct = finance.revenue > 0 ? (gross / finance.revenue) * 100 : 0
+  const marginScore = Math.min(100, Math.max(0, (marginPct / 40) * 100))
+  const cashScore = Math.min(100, Math.max(0, (cashMonths / 6) * 100))
+  const doneActions = actions.filter(a => a.done).length
+  const actionScore = actions.length === 0 ? 0 : Math.min(100, (doneActions / actions.length) * 100)
+  const pipelineScore = 70
+  const overall = Math.round((marginScore * 0.3 + cashScore * 0.3 + actionScore * 0.25 + pipelineScore * 0.15))
+  let level: HealthScore['level'] = 'ok'
+  if (overall < 40) level = 'critical'
+  else if (overall < 60) level = 'needs-attention'
+  else if (overall >= 80) level = 'good'
+  const recommendations: string[] = []
+  if (marginPct < 30) recommendations.push('Improve gross margin - review pricing or direct costs')
+  if (cashMonths < 3) recommendations.push('Low cash runway - focus on collections/cost reduction')
+  if (actions.length > doneActions) recommendations.push('Complete planned actions to improve execution')
+  if (recommendations.length === 0) recommendations.push('Business health looks stable')
+  return {
+    overall,
+    breakdown: { cash: Math.round(cashScore), margin: Math.round(marginScore), actions: Math.round(actionScore), pipeline: pipelineScore },
+    level,
+    recommendations
+  }
+}
+
+
+
+==========================================================================================
+FILE: src/lib/health/__tests__/index.test.ts
+==========================================================================================
+import { describe, it, expect } from 'vitest'
+import { computeHealthScore } from '../index'
+
+describe('health scoring', () => {
+  it('computes score', () => {
+    const res = computeHealthScore({ revenue: 300000, direct: 195000, expenses: 75000, price: 2500, variable: 1625, fixed: 75000 }, [], 6)
+    expect(res.overall).toBeGreaterThan(0)
+    expect(res.level).toBeDefined()
+  })
+})
+
+
+
+==========================================================================================
+FILE: src/lib/trends/index.ts
+==========================================================================================
+import type { TrendPoint } from '@/types'
+
+export function generateTrends(months = 6): TrendPoint[] {
+  const data: TrendPoint[] = []
+  const baseRevenue = 280000
+  for (let i = months - 1; i >= 0; i--) {
+    const month = new Date(2026, 8 - i, 1).toLocaleString('en-US', { month: 'short' })
+    const revenue = baseRevenue + i * 5000 + (Math.random() - 0.5) * 10000
+    const expenses = revenue * 0.65
+    const gross = revenue - expenses
+    data.push({ month, revenue: Math.round(revenue), expenses: Math.round(expenses), gross: Math.round(gross) })
+  }
+  return data
+}
+
+
+
+==========================================================================================
+FILE: src/lib/notifications/index.ts
+==========================================================================================
+import type { Action, Finance, Notification } from '@/types'
+
+export function generateNotifications(finance: Finance, actions: Action[]): Notification[] {
+  const notifications: Notification[] = []
+  const gross = finance.revenue - finance.direct
+  const marginPct = finance.revenue > 0 ? (gross / finance.revenue) * 100 : 0
+  if (marginPct < 30) {
+    notifications.push({
+      id: 'n-margin',
+      type: 'warning',
+      title: 'Low gross margin',
+      message: `Gross margin is ${marginPct.toFixed(1)}% - below target of 35%`,
+      read: false,
+      createdAt: new Date().toISOString()
+    })
+  }
+  const overdue = actions.filter(a => !a.done && new Date(a.due) < new Date())
+  if (overdue.length > 0) {
+    notifications.push({
+      id: 'n-overdue',
+      type: 'info',
+      title: 'Overdue actions',
+      message: `${overdue.length} action(s) are past due`,
+      read: false,
+      createdAt: new Date().toISOString()
+    })
+  }
+  if (notifications.length === 0) {
+    notifications.push({
+      id: 'n-ok',
+      type: 'success',
+      title: 'All good',
+      message: 'No immediate issues detected',
+      read: false,
+      createdAt: new Date().toISOString()
+    })
+  }
+  return notifications
+}
+
+
+==========================================================================================
+FILE: src/lib/notifications/__tests__/index.test.ts
+==========================================================================================
+import { describe, it, expect } from 'vitest'
+import { generateNotifications } from '../index'
+
+describe('notifications', () => {
+  it('generates notifications', () => {
+    const res = generateNotifications({ revenue: 100000, direct: 80000, expenses: 50000, price: 1000, variable: 800, fixed: 50000 }, [])
+    expect(Array.isArray(res)).toBe(true)
+    expect(res.length).toBeGreaterThan(0)
+  })
+})
+
+
+
+==========================================================================================
+FILE: src/data/mock-data.ts
+==========================================================================================
+/**
+ * ALL sample data for the prototype lives in this file.
+ *
+ * Nothing here is real. As each backend stage lands, replace the matching
+ * export with data from the API and delete it from this file. When this file
+ * is empty, the prototype is fully wired to real data.
+ *
+ * Replaced in: Stage 1 (user, workspace labels), Stage 3 (business, profile
+ * completeness, context checklist), Stage 5 (chat replies, health, reports),
+ * Stage 6 (actions, notices), Stage 10 (forecast shape, trends).
+ */
+import type { Action, Business, Finance, Message, Settings } from '@/types'
+
+// ---- Account & workspace (Stage 1) -------------------------------------
+export const mockUser = {
+  firstName: 'Amara',
+  fullName: 'Amara Otieno',
+  initials: 'AO',
+  role: 'Owner',
+}
+
+export const mockWorkspace = {
+  label: 'AMANI WORKSPACE',
+  monogram: 'AH',
+  stageLabel: 'Established business',
+}
+
+// ---- Dates (hard-coded in the prototype) --------------------------------
+export const mockDates = {
+  todayLine: 'MONDAY, 26 OCTOBER',
+  reportPeriod: 'September 2026',
+  reportPeriodUpper: 'SEPTEMBER 2026',
+  lastUpdated: '25 October 2026',
+  monthlyReviewDay: 'Friday, 30 October',
+  planReview: '23 November',
+  newActionDue: '07 Nov',
+  newActionReviewDate: '7 November 2026',
+}
+
+// ---- Business profile (Stage 3) ----------------------------------------
+export const seedBusiness: Business = {
+  name: 'Amani Home & Living',
+  industry: 'Retail & homeware',
+  stage: 'Established',
+  location: 'Nairobi, Kenya',
+  customers: 'Design-conscious urban homeowners',
+  model: 'Direct-to-consumer retail',
+  goal: 'Improve cash resilience while protecting our 35% gross margin.',
+}
+
+export const mockProfile = {
+  completeness: 92,
+  checklist: [
+    { label: 'Business model confirmed', done: true },
+    { label: 'Customer segment described', done: true },
+    { label: 'September figures available', done: true },
+    { label: 'Add average collection period', done: false },
+  ],
+}
+
+// ---- Finance (Stage 2/10) ----------------------------------------------
+export const seedFinance: Finance = {
+  revenue: 300000,
+  direct: 195000,
+  expenses: 75000,
+  price: 2500,
+  variable: 1625,
+  fixed: 75000,
+}
+
+export const mockMetrics = {
+  revenueTrend: '8.4% from August',
+  marginTarget: { min: 32, max: 38 },
+}
+
+/** Multipliers used to fabricate the illustrative chart. Replace with forecasts in Stage 10. */
+export const mockCashShape = [
+  { month: 'May', actual: 0.66, forecast: 0.7 },
+  { month: 'Jun', actual: 0.8, forecast: 0.78 },
+  { month: 'Jul', actual: 0.72, forecast: 0.83 },
+  { month: 'Aug', actual: 0.94, forecast: 0.9 },
+  { month: 'Sep', actual: 1, forecast: 0.98 },
+  { month: 'Oct', actual: 1.12, forecast: 1.08 },
+  { month: 'Nov', actual: null, forecast: 1.16 },
+  { month: 'Dec', actual: null, forecast: 1.24 },
+] as const
+
+export const mockHealth = {
+  score: 78,
+  headline: 'Steady, with room to strengthen',
+  summary: 'Profitability is sound. Cash visibility is your main opportunity.',
+  bars: [
+    { label: 'Profitability', rating: 'Strong', width: 86, warn: false },
+    { label: 'Cash resilience', rating: 'Watch', width: 58, warn: true },
+    { label: 'Customer momentum', rating: 'Good', width: 72, warn: false },
+  ],
+}
+
+// ---- Actions (Stage 6) --------------------------------------------------
+export const initialActions: Action[] = [
+  { id: 1, title: 'Call 5 customers about delivery experience', area: 'Customer insight', due: 'Today', done: false, impact: 'High impact' },
+  { id: 2, title: 'Review supplier terms for top 3 materials', area: 'Cost control', due: '28 Oct', done: false, impact: 'KSh 12k potential' },
+  { id: 3, title: 'Update October cash collection forecast', area: 'Financial health', due: '30 Oct', done: false, impact: 'Reduce risk' },
+  { id: 4, title: 'Document the weekly stock-count routine', area: 'Operations', due: '02 Nov', done: true, impact: 'Completed' },
+]
+
+/** Impact label restored when a completed action is reopened. */
+export const activeImpactByArea: Record<string, string> = {
+  'Customer insight': 'High impact',
+  'Cost control': 'KSh 12k potential',
+  'Financial health': 'Reduce risk',
+  Operations: 'Improve consistency',
+}
+
+// ---- Mentor chat (Stage 5) ---------------------------------------------
+export const initialMessages: Message[] = [
+  {
+    id: 1,
+    from: 'lumini',
+    text: 'Good morning, Amara. Iâ€™ve reviewed your latest figures. Your gross margin is healthy at 35%, but cash timing deserves attention before you pursue more sales.',
+    detail: 'Based on your September figures Â· User reported, not audited',
+  },
+]
+
+export const mockPromptChips = ['What should I do next?', 'Why is cash tight?', 'Should I change my pricing?']
+
+export const mockChatDefault = {
+  text: 'Before recommending a direction, Iâ€™d separate what is measured from what is assumed. Your current figures show a positive operating result, so the next useful step is to test the constraint with the least irreversible commitment.',
+  detail: 'Recommendation Â· Moderate confidence Â· Based on saved business context',
+}
+
+export const mockChatCash = {
+  text: 'Your business is profitable on the figures provided, so cash pressure is more likely a timing issue than a demand issue. Start by mapping when customers pay against when suppliers, payroll, and debt fall due. Growth can make this tighter if each sale consumes cash before collection.',
+  detail: 'Diagnosis Â· Cash movement is not the same as profit Â· 3 inputs still needed',
+}
+
+export const mockChatNext = {
+  text: 'Speak with five recent customers before increasing acquisition spend. It is low-cost, reversible, and will tell you whether delivery, product selection, or follow-up is limiting repeat purchases. Measure repeat-purchase intent and the reasons behind it.',
+  detail: 'Ranked for impact, effort, cost and reversibility Â· Review in 7 days',
+}
+
+export const mockTopics = [
+  { key: 'diagnose', title: 'Diagnose a challenge', desc: 'Find the constraint beneath the symptom.', q: 'Sales have slowed. Help me find the real cause.' },
+  { key: 'compare', title: 'Compare a decision', desc: 'Weigh options, trade-offs and downside.', q: 'Help me compare hiring a salesperson with outsourcing.' },
+  { key: 'numbers', title: 'Understand the numbers', desc: 'Calculate without hiding the assumptions.', q: 'Explain my break-even point and margin.' },
+] as const
+
+// ---- Notifications (Stage 11) ------------------------------------------
+export const mockNotices = [
+  { key: 'review', icon: 'clock', unread: true, title: 'Your monthly review is Friday', body: 'September figures are ready for your review.', when: '2 hours ago' },
+  { key: 'due', icon: 'target', unread: false, title: 'One action is due today', body: 'Customer calls are still open in this weekâ€™s plan.', when: 'Today' },
+] as const
+
+// ---- Insights reports (Stage 5/10) -------------------------------------
+export const reportNames = ['Financial health', 'Customer momentum', 'Cash & working capital', 'Monthly business review'] as const
+export type ReportName = (typeof reportNames)[number]
+
+export const mockReportLeads: Record<ReportName, string> = {
+  'Financial health': 'Amani is generating a positive operating result. The immediate opportunity is not simply more sales, but better visibility over when cash enters and leaves the business.',
+  'Customer momentum': 'Customer conversations are the missing evidence in your retention picture. Your next review should distinguish delivery satisfaction from repeat-purchase intent.',
+  'Cash & working capital': 'Your reported profit does not yet explain cash timing. Collection period, supplier terms and inventory commitment are the three inputs needed for a complete diagnosis.',
+  'Monthly business review': 'October closes with stronger reported performance and one clear learning: small, measurable operating reviews are creating better decisions.',
+}
+
+export const mockPlan = {
+  title: 'Strengthen cash & customer retention',
+  horizon: '30-day focus',
+}
+
+// ---- Defaults ------------------------------------------------------------
+export const seedSettings: Settings = { weekly: true, actions: true, research: false, guided: true }
+
+
+==========================================================================================
+FILE: src/views/AuthView.tsx
+==========================================================================================
+import { useState } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { Sparkles, Mail, Lock, User } from 'lucide-react'
+
+export default function AuthView() {
+  const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login, signup } = useAuth()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      if (isLogin) {
+        await login(email, password)
+      } else {
+        await signup(email, password, displayName)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f7f5f2 0%, #e8e4df 100%)' }}>
+      <div style={{ width: '100%', maxWidth: '400px', padding: '32px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+            <Sparkles size={32} style={{ color: '#001f3f' }} />
+            <h1 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>Lumini</h1>
+          </div>
+          <p style={{ color: '#666', margin: 0 }}>AI-powered business mentor</p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {!isLogin && (
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+                <User size={16} style={{ display: 'inline', marginRight: '6px' }} />
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required={!isLogin}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                placeholder="Enter your full name"
+              />
+            </div>
+          )}
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+              <Mail size={16} style={{ display: 'inline', marginRight: '6px' }} />
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+              <Lock size={16} style={{ display: 'inline', marginRight: '6px' }} />
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: '#001f3f',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Sign Up')}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            style={{ background: 'none', border: 'none', color: '#001f3f', cursor: 'pointer', fontSize: '14px' }}
+          >
+            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/HomeView.tsx
+==========================================================================================
+import { ArrowRight, ArrowUpRight, Check, CircleDollarSign, Circle, Clock3, Flag, Plus, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react'
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
+import { EvidenceTag } from '@/components/app/EvidenceTag'
+import { useWorkspace } from '@/context/workspace-context'
+import { useGo } from '@/hooks/use-go'
+import { money } from '@/lib/format'
+import { mockDates, mockMetrics, mockUser } from '@/data/mock-data'
+import { computeHealthScore } from '@/lib/health'
+import { useMemo } from 'react'
+
+export default function HomeView() {
+  const go = useGo()
+  const { actions, finance, margin, operating, completed, cashData, toggleAction, addSuggestedAction } = useWorkspace()
+  const { min, max } = mockMetrics.marginTarget
+  const health = useMemo(() => computeHealthScore(finance, actions, 6), [finance, actions])
+
+  return (
+    <section className="view home-view">
+      <div className="welcome-row">
+        <div>
+          <p className="date-line">{mockDates.todayLine}</p>
+          <h1>Good morning, {mockUser.firstName}.</h1>
+          <p>Your business is profitable. Today, let’s make its cash work harder.</p>
+        </div>
+        <button className="primary-btn" onClick={() => go('mentor')}><Sparkles size={17} />Ask Lumini</button>
+      </div>
+
+      <div className="overview-grid">
+        <article className="priority-panel">
+          <div className="panel-kicker"><span>YOUR NEXT BEST MOVE</span><EvidenceTag>High confidence</EvidenceTag></div>
+          <div className="priority-body">
+            <span className="priority-number">01</span>
+            <div>
+              <h2>Listen before you spend.</h2>
+              <p>Speak with five recent customers before increasing your marketing budget. Their answers will show whether repeat sales are limited by delivery, product selection, or follow-up.</p>
+              <div className="reason-row">
+                <span><Clock3 size={14} />30 minutes</span>
+                <span><CircleDollarSign size={14} />No spend required</span>
+                <span><Flag size={14} />Review in 7 days</span>
+              </div>
+            </div>
+          </div>
+          <div className="priority-footer">
+            <button className="text-btn light" onClick={() => go('mentor')}>See the reasoning <ArrowRight size={16} /></button>
+            <button className="gold-btn" onClick={() => { addSuggestedAction(); go('plans') }}>Add to my plan <Plus size={16} /></button>
+          </div>
+        </article>
+
+        <article className="health-panel">
+          <div className="section-head">
+            <div><p className="eyebrow">BUSINESS HEALTH</p><h3>Health Score</h3></div>
+            <button className="icon-btn" onClick={() => go('insights')} aria-label="View health report"><ArrowUpRight size={18} /></button>
+          </div>
+          <div className="health-score">
+            <div className="score-ring"><span>{health.overall}<small>/100</small></span></div>
+            <div><strong>{health.level}</strong><p>{health.recommendations[0]}</p></div>
+          </div>
+          <div className="health-bars">
+            <div><span>Cash <b>{health.breakdown.cash}%</b></span><i><em style={{ width: `${health.breakdown.cash}%` }} /></i></div>
+            <div><span>Margin <b>{health.breakdown.margin}%</b></span><i><em style={{ width: `${health.breakdown.margin}%` }} /></i></div>
+            <div><span>Actions <b>{health.breakdown.actions}%</b></span><i><em style={{ width: `${health.breakdown.actions}%` }} /></i></div>
+            <div><span>Pipeline <b>{health.breakdown.pipeline}%</b></span><i><em style={{ width: `${health.breakdown.pipeline}%` }} /></i></div>
+          </div>
+        </article>
+      </div>
+
+      <div className="metric-strip">
+        <button onClick={() => go('finances')}><span>MONTHLY REVENUE <ArrowUpRight size={14} /></span><strong>{money(finance.revenue)}</strong><small><ArrowUpRight size={13} />{mockMetrics.revenueTrend}</small></button>
+        <button onClick={() => go('finances')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= min && margin <= max ? `Within your ${min}–${max}% target` : `Outside your ${min}–${max}% target`}</small></button>
+        <button onClick={() => go('finances')}><span>OPERATING RESULT <ArrowUpRight size={14} /></span><strong>{money(operating)}</strong><small>Before tax & unreported items</small></button>
+        <button onClick={() => go('plans')}><span>ACTIONS COMPLETE <ArrowUpRight size={14} /></span><strong>{completed}<i> / {actions.length}</i></strong><small>{actions.length - completed} priorities still open</small></button>
+      </div>
+
+      <div className="lower-grid">
+        <article className="actions-panel">
+          <div className="section-head">
+            <div><p className="eyebrow">THIS WEEK</p><h3>Priorities that matter</h3></div>
+            <button className="text-btn" onClick={() => go('plans')}>View all <ArrowRight size={15} /></button>
+          </div>
+          <div className="action-list">
+            {actions.slice(0, 3).map(a => (
+              <button className={`action-row ${a.done ? 'done' : ''}`} key={a.id} onClick={() => toggleAction(a.id)}>
+                {a.done ? <Check size={16} /> : <Circle size={16} />}
+                <div><strong>{a.title}</strong><span>Due {a.due} · {a.area}</span></div>
+                <i>Impact: {a.impact}</i>
+              </button>
+            ))}
+          </div>
+        </article>
+        <article className="cash-panel">
+          <div className="section-head">
+            <div><p className="eyebrow">CASH TRAJECTORY</p><h3>Stability check</h3></div>
+            <button className="icon-btn" onClick={() => go('finances')} aria-label="View finances"><TrendingUp size={18} /></button>
+          </div>
+          <div className="cash-chart">
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={cashData}>
+                <defs>
+                  <linearGradient id="cash" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#b9a06c" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#b9a06c" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis hide />
+                <Area type="monotone" dataKey="forecast" stroke="#b9a06c" strokeWidth={2} fill="url(#cash)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <footer><ShieldCheck size={15} />Based on your inputs and assumptions. Review quarterly.</footer>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/InsightsView.tsx
+==========================================================================================
+import { useMemo, useState } from 'react'
+import { ChevronRight, Download, Lightbulb, Plus, ShieldCheck } from 'lucide-react'
+import { EvidenceTag } from '@/components/app/EvidenceTag'
+import { useWorkspace } from '@/context/workspace-context'
+import { money } from '@/lib/format'
+import { mockDates, mockReportLeads, reportNames, type ReportName } from '@/data/mock-data'
+import { computeHealthScore } from '@/lib/health'
+import { generateTrends } from '@/lib/trends'
+
+export default function InsightsView() {
+  const { margin, operating, exportCSV, exportPDF, openNewAction, finance, actions } = useWorkspace()
+  const [report, setReport] = useState<ReportName>('Financial health')
+  const health = useMemo(() => computeHealthScore(finance, actions, 6), [finance, actions])
+  const trends = useMemo(() => generateTrends(6), [])
+
+  return (
+    <section className="view insights-view">
+      <div className="page-heading">
+        <div><p className="date-line">DECISION RECORDS</p><h1>See what changed, and why.</h1><p>Reports that connect your metrics, decisions and outcomes.</p></div>
+        <div className="flex gap-2">
+          <button className="secondary-btn" onClick={exportCSV}><Download size={16} />Export CSV</button>
+          <button className="secondary-btn" onClick={exportPDF}><Download size={16} />Export Report</button>
+        </div>
+      </div>
+      <div className="insights-layout">
+        <div className="report-nav">
+          {reportNames.map((r, i) => (
+            <button className={report === r ? 'active' : ''} key={r} onClick={() => setReport(r)}><span>0{i + 1}</span><strong>{r}</strong><ChevronRight size={16} /></button>
+          ))}
+        </div>
+        <article className="report-content">
+          <div className="report-meta">
+            <EvidenceTag>{report === 'Financial health' ? 'Calculated + reported' : 'Review draft'}</EvidenceTag>
+            <span>{mockDates.reportPeriodUpper}</span>
+          </div>
+          <h2>{report}</h2>
+          <p className="report-lead">{mockReportLeads[report]}</p>
+          <div className="report-findings">
+            <h3>Health Score</h3>
+            <div><span>{health.overall}</span><p><strong>Overall: {health.level}</strong>. {health.recommendations.join('; ')}</p></div>
+            <h3 style={{marginTop:'1rem'}}>Trends (last 6 months)</h3>
+            <div style={{display:'flex',gap:'1rem',flexWrap:'wrap'}}>
+              {trends.map(t => (
+                <div key={t.month} style={{padding:'0.5rem 1rem',background:'var(--muted)',borderRadius:'8px'}}><strong>{t.month}</strong>: Rev {money(t.revenue)} / Gross {money(t.gross)}</div>
+              ))}
+            </div>
+            <h3 style={{marginTop:'1rem'}}>What the evidence says</h3>
+            <div><span>01</span><p><strong>Margin provides room to test.</strong> A {margin.toFixed(0)}% gross margin gives you some room for controlled pricing and retention experiments, provided direct costs remain stable.</p></div>
+            <div><span>02</span><p><strong>Profit and cash need separate reviews.</strong> The {money(operating)} operating result excludes timing differences, debt principal, owner withdrawals and capital expenditure.</p></div>
+            <div><span>03</span><p><strong>One unknown materially affects the next step.</strong> Average customer collection period has not been provided. This should be measured before expanding inventory or acquisition spend.</p></div>
+          </div>
+          <div className="report-recommendation">
+            <Lightbulb size={21} />
+            <div><span>RECOMMENDED NEXT STEP</span><strong>Complete a 13-week cash collection map.</strong><p>Start with known payment dates and mark assumptions clearly. Review weekly.</p></div>
+            <button onClick={() => openNewAction('Complete a 13-week cash collection map')} aria-label="Add as an action"><Plus size={17} /></button>
+          </div>
+          <footer><ShieldCheck size={15} />This report uses your saved inputs. It is not an audit or a guarantee of future performance.</footer>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/FinancesView.tsx
+==========================================================================================
+import { AlertCircle, ArrowDownRight, ArrowUpRight, CheckCircle2, Download, SlidersHorizontal } from 'lucide-react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { EvidenceTag } from '@/components/app/EvidenceTag'
+import { useWorkspace } from '@/context/workspace-context'
+import { money } from '@/lib/format'
+import { mockDates } from '@/data/mock-data'
+import type { Finance } from '@/types'
+import { useState } from 'react'
+import { breakEvenUnits, contributionPerUnit, grossMargin } from '@/lib/financial-engine'
+
+const reportedFields: { k: keyof Finance; l: string; h: string }[] = [
+  { k: 'revenue', l: 'Revenue', h: 'Total sales for the period' },
+  { k: 'direct', l: 'Direct costs', h: 'Costs tied to products sold' },
+  { k: 'expenses', l: 'Operating expenses', h: 'Overheads for the same period' },
+]
+const unitFields: { k: keyof Finance; l: string }[] = [
+  { k: 'price', l: 'Selling price / unit' },
+  { k: 'variable', l: 'Variable cost / unit' },
+  { k: 'fixed', l: 'Monthly fixed costs' },
+]
+
+export default function FinancesView() {
+  const { finance, setFinance, gross, margin, operating, contribution, breakEven, cashData, exportCSV } = useWorkspace()
+  const setField = (k: keyof Finance) => (e: React.ChangeEvent<HTMLInputElement>) => setFinance(f => ({ ...f, [k]: Number(e.target.value) }))
+  const [scenario, setScenario] = useState({ priceDelta: 0, volumeDelta: 0, costDelta: 0 })
+
+  const scenPrice = finance.price * (1 + scenario.priceDelta / 100)
+  const scenVar = finance.variable * (1 + scenario.costDelta / 100)
+  const scenContrib = contributionPerUnit(scenPrice, scenVar)
+  const scenBE = breakEvenUnits(finance.fixed, scenContrib)
+  const scenGrossMargin = grossMargin(finance.revenue * (1 + scenario.volumeDelta / 100), finance.direct * (1 + scenario.volumeDelta / 100))
+
+  return (
+    <section className="view finance-view">
+      <div className="page-heading">
+        <div><p className="date-line">FINANCIAL INTELLIGENCE</p><h1>Clarity behind every shilling.</h1><p>Transparent calculations, editable assumptions, no hidden arithmetic.</p></div>
+        <button className="secondary-btn" onClick={exportCSV}><Download size={16} />Export summary</button>
+      </div>
+
+      <div className="finance-layout">
+        <article className="finance-inputs">
+          <div className="section-head">
+            <div><p className="eyebrow">{mockDates.reportPeriodUpper}</p><h3>Your reported figures</h3></div>
+            <EvidenceTag>User reported</EvidenceTag>
+          </div>
+          {reportedFields.map(x => (
+            <label className="money-field" key={x.k}>
+              <span>{x.l}<small>{x.h}</small></span>
+              <div><i>KSh</i><input type="number" min="0" value={finance[x.k]} onChange={setField(x.k)} /></div>
+            </label>
+          ))}
+          <div className="formula-note"><AlertCircle size={16} /><p>Profit is not cash movement. Receivables, inventory, debt and owner withdrawals are not included here.</p></div>
+        </article>
+
+        <article className="finance-results">
+          <p className="eyebrow">CALCULATED POSITION</p>
+          <div className="result-main">
+            <span>Operating result</span>
+            <strong>{money(operating)}</strong>
+            <small className={operating >= 0 ? 'positive' : 'negative'}>
+              {operating >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
+              {finance.revenue ? ((operating / finance.revenue) * 100).toFixed(1) : 0}% of revenue Â· before unreported items
+            </small>
+          </div>
+          <div className="result-pair">
+            <div><span>Gross profit</span><strong>{money(gross)}</strong><small>Revenue âˆ’ direct costs</small></div>
+            <div><span>Gross margin</span><strong>{margin.toFixed(1)}%</strong><small>Gross profit Ã· revenue</small></div>
+          </div>
+          <div className="result-foot"><CheckCircle2 size={16} /><span>All values recalculate instantly from your inputs.</span></div>
+        </article>
+      </div>
+
+      <article className="break-even">
+        <div className="break-intro">
+          <p className="eyebrow">UNIT ECONOMICS</p>
+          <h2>Know your break-even point.</h2>
+          <p>See how price, variable cost and fixed overhead shape the number of units you need to sell.</p>
+          <div className="break-result">
+            <span>BREAK-EVEN VOLUME</span>
+            <strong>{breakEven || 'â€”'} <small>units / month</small></strong>
+            <p>{contribution > 0 ? `Each unit contributes ${money(contribution)} toward fixed costs.` : 'Contribution is zero or negative. Break-even cannot be reached at these unit economics.'}</p>
+          </div>
+        </div>
+        <div className="unit-fields">
+          {unitFields.map(x => (
+            <label key={x.k}><span>{x.l}</span><div><i>KSh</i><input type="number" min="0" value={finance[x.k]} onChange={setField(x.k)} /></div></label>
+          ))}
+          <div className="contribution-track">
+            <span>Contribution margin ratio <b>{finance.price ? Math.max(0, (contribution / finance.price) * 100).toFixed(0) : 0}%</b></span>
+            <i><em style={{ width: `${Math.max(0, Math.min(100, (contribution / finance.price) * 100))}%` }} /></i>
+          </div>
+        </div>
+      </article>
+
+      <article className="break-even" style={{ marginTop: '24px' }}>
+        <div className="break-intro">
+          <p className="eyebrow"><SlidersHorizontal size={14} style={{ display: 'inline', marginRight: '4px' }} />SCENARIO ANALYSIS</p>
+          <h2>What-if modelling</h2>
+          <p>Test best/base/worst cases. All calculations use the deterministic financial engine.</p>
+          <div className="break-result">
+            <span>SCENARIO BREAK-EVEN</span>
+            <strong>{scenBE.feasible ? scenBE.units : 'â€”'} <small>units / month</small></strong>
+            <p>{scenBE.feasible ? `With adjusted pricing/costs, each unit contributes ${money(scenContrib)}.` : scenBE.warning || 'Not feasible under these assumptions.'}</p>
+            <p style={{ marginTop: '8px' }}>Scenario gross margin: <strong>{scenGrossMargin.toFixed(1)}%</strong></p>
+          </div>
+        </div>
+        <div className="unit-fields">
+          <label><span>Price change (%)</span><input type="range" min="-20" max="20" value={scenario.priceDelta} onChange={e => setScenario(s => ({ ...s, priceDelta: Number(e.target.value) }))} className="navy-range" /><small>{scenario.priceDelta > 0 ? '+' : ''}{scenario.priceDelta}%</small></label>
+          <label><span>Variable cost change (%)</span><input type="range" min="-15" max="25" value={scenario.costDelta} onChange={e => setScenario(s => ({ ...s, costDelta: Number(e.target.value) }))} className="navy-range" /><small>{scenario.costDelta > 0 ? '+' : ''}{scenario.costDelta}%</small></label>
+          <label><span>Volume change (%)</span><input type="range" min="-30" max="40" value={scenario.volumeDelta} onChange={e => setScenario(s => ({ ...s, volumeDelta: Number(e.target.value) }))} className="navy-range" /><small>{scenario.volumeDelta > 0 ? '+' : ''}{scenario.volumeDelta}%</small></label>
+          <div className="formula-note"><AlertCircle size={16} /><p><strong>Profit vs cash:</strong> These are profit-based scenarios. Cash timing (receivables, payables, inventory) can differ significantly.</p></div>
+        </div>
+      </article>
+
+      <article className="forecast-panel">
+        <div className="section-head">
+          <div><p className="eyebrow">PERFORMANCE & OUTLOOK</p><h3>Actual result and planning forecast</h3></div>
+          <div className="legend"><span className="actual">Actual</span><span className="forecast">Forecast</span></div>
+        </div>
+        <div className="large-chart">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={cashData} margin={{ top: 12, right: 12, bottom: 0, left: -12 }}>
+              <defs>
+                <linearGradient id="actualFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#af915f" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#af915f" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="#dedbd3" strokeDasharray="2 4" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#77756e', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#77756e', fontSize: 11 }} tickFormatter={v => `${Math.round(v / 1000)}k`} />
+              <Tooltip formatter={v => money(Number(v))} contentStyle={{ border: '1px solid #d8d3c8', background: '#fffdf8', borderRadius: 2 }} />
+              <Area type="monotone" dataKey="actual" connectNulls={false} stroke="#8d7345" strokeWidth={2.5} fill="url(#actualFill)" />
+              <Area type="monotone" dataKey="forecast" stroke="#162638" strokeWidth={1.8} strokeDasharray="5 5" fill="transparent" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="chart-note">Forecast is an illustrative planning scenario derived from your current result, not a guarantee or externally verified market forecast.</p>
+      </article>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/SettingsView.tsx
+==========================================================================================
+import { ArrowRight, Database, Download, Eye, LockKeyhole, ShieldCheck } from 'lucide-react'
+import { useWorkspace } from '@/context/workspace-context'
+import type { Settings } from '@/types'
+
+const toggles: { k: keyof Settings; t: string; d: string }[] = [
+  { k: 'guided', t: 'Guided explanations', d: 'Use plain language and reveal advanced detail on demand.' },
+  { k: 'weekly', t: 'Weekly business review', d: 'Prepare a concise review of metrics, actions and open questions.' },
+  { k: 'actions', t: 'Action reminders', d: 'Show due and overdue priorities in your workspace.' },
+  { k: 'research', t: 'External research', d: 'Allow current external sources when they materially improve a decision.' },
+]
+
+export default function SettingsView() {
+  const { settings, setSettings, exportCSV, exportJSON, exportPDF, restoreDemo } = useWorkspace()
+
+  return (
+    <section className="view settings-view">
+      <div className="page-heading">
+        <div><p className="date-line">YOUR PREFERENCES</p><h1>A workspace on your terms.</h1><p>Control guidance, reviews and how your information is used.</p></div>
+      </div>
+      <div className="settings-layout">
+        <div className="settings-main">
+          <div className="settings-section">
+            <h3>Guidance & reviews</h3>
+            <p>Choose how Lumini supports your working rhythm.</p>
+            {toggles.map(x => (
+              <div className="setting-row" key={x.k}>
+                <div><strong>{x.t}</strong><span>{x.d}</span></div>
+                <button role="switch" aria-checked={settings[x.k]} aria-label={x.t} className={`switch ${settings[x.k] ? 'on' : ''}`} onClick={() => setSettings(s => ({ ...s, [x.k]: !s[x.k] }))}><i /></button>
+              </div>
+            ))}
+          </div>
+          <div className="settings-section">
+            <h3>Data & portability</h3>
+            <p>Your information remains inspectable and exportable.</p>
+            <button className="data-action" onClick={exportCSV}><Download size={18} /><span><strong>Export CSV</strong><small>Download actions and summary data as CSV.</small></span><ArrowRight size={16} /></button>
+            <button className="data-action" onClick={exportJSON}><Download size={18} /><span><strong>Export JSON</strong><small>Download full workspace data as JSON.</small></span><ArrowRight size={16} /></button>
+            <button className="data-action" onClick={exportPDF}><Download size={18} /><span><strong>Export Report</strong><small>Download business report (text).</small></span><ArrowRight size={16} /></button>
+            <button className="data-action" onClick={restoreDemo}><Database size={18} /><span><strong>Restore demo workspace</strong><small>Reset financial figures, actions and conversation to the original example.</small></span><ArrowRight size={16} /></button>
+          </div>
+        </div>
+        <aside className="settings-aside">
+          <ShieldCheck size={28} />
+          <h3>Privacy is a product principle.</h3>
+          <p>Lumini separates reported facts, calculations and assumptions so you stay in control of the story behind the numbers.</p>
+          <span><LockKeyhole size={15} />Private workspace</span>
+          <span><Eye size={15} />Explainable context</span>
+          <span><Download size={15} />Portable data</span>
+          <small>This preview stores changes only in this browser. No account or cloud sync is connected.</small>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/BusinessView.tsx
+==========================================================================================
+import { ArrowRight, Building2, Check, LockKeyhole, Plus, Target, Sparkles } from 'lucide-react'
+import { EvidenceTag } from '@/components/app/EvidenceTag'
+import { useWorkspace } from '@/context/workspace-context'
+import { useGo } from '@/hooks/use-go'
+import { mockProfile } from '@/data/mock-data'
+import type { Business } from '@/types'
+import { QuestionnaireEngine } from '@/lib/questionnaire-engine'
+import { useState } from 'react'
+
+const essentials: { k: keyof Business; l: string }[] = [
+  { k: 'name', l: 'Business name' },
+  { k: 'industry', l: 'Industry' },
+  { k: 'stage', l: 'Business stage' },
+  { k: 'location', l: 'Location / service area' },
+  { k: 'model', l: 'Business model' },
+  { k: 'customers', l: 'Primary customers' },
+]
+
+const questionnaireEngine = new QuestionnaireEngine()
+
+export default function BusinessView() {
+  const go = useGo()
+  const { business, setBusiness, showToast } = useWorkspace()
+  const [currentQ, setCurrentQ] = useState(questionnaireEngine.getNextQuestion())
+  const [answers, setAnswers] = useState<Record<string, any>>({})
+
+  const handleAnswer = (qId: string, answer: any) => {
+    questionnaireEngine.recordAnswer(qId, answer)
+    setAnswers(questionnaireEngine.getAnswers())
+    setCurrentQ(questionnaireEngine.getNextQuestion(qId))
+  }
+
+  return (
+    <section className="view business-view">
+      <div className="page-heading">
+        <div><p className="date-line">BUSINESS MEMORY</p><h1>What Lumini understands.</h1><p>Inspect and correct the context behind every recommendation.</p></div>
+        <EvidenceTag>{mockProfile.completeness}% complete</EvidenceTag>
+      </div>
+      <div className="profile-progress"><span style={{ width: `${mockProfile.completeness}%` }} /></div>
+      <div className="business-layout">
+        <form className="business-form" onSubmit={e => { e.preventDefault(); showToast('Business profile saved') }}>
+          <div className="form-section">
+            <div className="form-section-title"><Building2 size={19} /><div><h3>Business essentials</h3><p>The basic context used across your workspace.</p></div></div>
+            <div className="field-grid">
+              {essentials.map(x => (
+                <label key={x.k}><span>{x.l}</span><input value={business[x.k]} onChange={e => setBusiness(b => ({ ...b, [x.k]: e.target.value }))} required /></label>
+              ))}
+            </div>
+          </div>
+          <div className="form-section">
+            <div className="form-section-title"><Target size={19} /><div><h3>Current direction</h3><p>Your active goal guides how recommendations are ranked.</p></div></div>
+            <label className="full-field"><span>Primary business goal</span><textarea rows={4} value={business.goal} onChange={e => setBusiness(b => ({ ...b, goal: e.target.value }))} /></label>
+          </div>
+          <div className="form-section">
+            <div className="form-section-title"><Sparkles size={19} /><div><h3>Adaptive questionnaire</h3><p>Answer only whatâ€™s needed based on your goal and stage.</p></div></div>
+            {currentQ ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <p style={{ fontWeight: 500 }}>{currentQ.prompt}</p>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{currentQ.whyItMatters}</p>
+                </div>
+                {currentQ.type === 'select' && currentQ.options && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {currentQ.options.map(opt => (
+                      <button key={opt} type="button" onClick={() => handleAnswer(currentQ.id, opt)} className="ghost-btn">{opt}</button>
+                    ))}
+                  </div>
+                )}
+                {currentQ.type === 'currency' && (
+                  <label className="full-field"><span>Amount</span><input type="number" onBlur={(e) => e.target.value && handleAnswer(currentQ.id, Number(e.target.value))} /></label>
+                )}
+                {currentQ.type === 'yesno' && (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type="button" onClick={() => handleAnswer(currentQ.id, true)} className="ghost-btn">Yes</button>
+                    <button type="button" onClick={() => handleAnswer(currentQ.id, false)} className="ghost-btn">No</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Questionnaire complete based on current answers.</p>
+            )}
+            {Object.keys(answers).length > 0 && (
+              <details style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                <summary>Captured answers</summary>
+                <pre style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{JSON.stringify(answers, null, 2)}</pre>
+              </details>
+            )}
+          </div>
+          <div className="form-actions">
+            <span><LockKeyhole size={14} />Only you can access this workspace</span>
+            <button className="primary-btn" type="submit">Save changes <Check size={16} /></button>
+          </div>
+        </form>
+        <aside className="context-aside">
+          <p className="eyebrow">CONTEXT QUALITY</p>
+          <h3>A clear foundation</h3>
+          <p>Lumini has enough context for financial diagnosis and weekly planning.</p>
+          <ul>
+            {mockProfile.checklist.map(c => (
+              <li key={c.label} className={c.done ? undefined : 'missing'}>{c.done ? <Check size={15} /> : <Plus size={15} />}{c.label}</li>
+            ))}
+          </ul>
+          <button onClick={() => go('finances')}>Review financial inputs <ArrowRight size={15} /></button>
+          <div className="fact-legend">
+            <strong>How facts are labelled</strong>
+            <span><i className="reported" />User reported</span>
+            <span><i className="calculated" />Calculated</span>
+            <span><i className="assumed" />Assumption</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/views/MentorView.tsx
+==========================================================================================
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, BookOpen, Calculator, Database, Plus, Send, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp } from 'lucide-react'
+import { EvidenceTag } from '@/components/app/EvidenceTag'
+import { useWorkspace } from '@/context/workspace-context'
+import { useGo } from '@/hooks/use-go'
+import { mockPromptChips, mockTopics } from '@/data/mock-data'
+
+const topicIcons = { diagnose: TrendingUp, compare: SlidersHorizontal, numbers: Calculator }
+
+export default function MentorView() {
+  const go = useGo()
+  const { messages, chatLoading, sendMessage, openNewAction } = useWorkspace()
+  const [input, setInput] = useState('')
+  const chatEnd = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, chatLoading])
+
+  const send = (preset?: string) => {
+    const text = (preset ?? input).trim()
+    if (!text || chatLoading) return
+    sendMessage(text)
+    setInput('')
+  }
+
+  return (
+    <section className="view mentor-view">
+      <div className="page-heading compact">
+        <div><p className="date-line">YOUR BUSINESS MENTOR</p><h1>Think it through, together.</h1><p>Advice grounded in your numbers, your context, and what is still unknown.</p></div>
+        <EvidenceTag>Context connected</EvidenceTag>
+      </div>
+      <div className="mentor-layout">
+        <div className="conversation">
+          <div className="conversation-context"><Database size={15} /><span>Using September financials, business profile & active goals</span><button onClick={() => go('business')}>Inspect context</button></div>
+          <div className="messages">
+            {messages.map(m => (
+              <div className={`message ${m.from}`} key={m.id}>
+                {m.from === 'lumini' && <span className="mentor-seal"><Sparkles size={16} /></span>}
+                <div>
+                  <p>{m.text}</p>
+                  {m.detail && <small><BookOpen size={13} />{m.detail}</small>}
+                  {m.from === 'lumini' && m.id !== 1 && <button className="message-action" onClick={() => openNewAction(m.text.split('.')[0])}><Plus size={14} />Turn into an action</button>}
+                </div>
+              </div>
+            ))}
+            {chatLoading && (
+              <div className="message lumini">
+                <span className="mentor-seal"><Sparkles size={16} /></span>
+                <div className="thinking"><i /><i /><i /><span>Reviewing your business context</span></div>
+              </div>
+            )}
+            <div ref={chatEnd} />
+          </div>
+          <div className="prompt-chips">{mockPromptChips.map(p => <button key={p} onClick={() => send(p)}>{p}</button>)}</div>
+          <form className="chat-form" onSubmit={e => { e.preventDefault(); send() }}>
+            <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder="Ask about a decision, challenge, or opportunityâ€¦" aria-label="Message Lumini" rows={2} />
+            <div>
+              <span>Enter to send Â· Shift + Enter for a new line</span>
+              <button className="send-btn" type="submit" disabled={!input.trim() || chatLoading} aria-label="Send message"><Send size={18} /></button>
+            </div>
+          </form>
+          <p className="ai-note">Lumini can make mistakes. Review assumptions before consequential decisions.</p>
+        </div>
+        <aside className="mentor-aside">
+          <p className="eyebrow">A BETTER CONVERSATION</p>
+          <h3>Start with what matters.</h3>
+          {mockTopics.map(x => {
+            const Icon = topicIcons[x.key]
+            return (
+              <button className="topic-link" key={x.key} onClick={() => send(x.q)}>
+                <Icon size={19} /><span><strong>{x.title}</strong><small>{x.desc}</small></span><ArrowRight size={15} />
+              </button>
+            )
+          })}
+          <div className="mentor-principle"><ShieldCheck size={20} /><p><strong>Context before advice.</strong><br />Lumini asks when a missing fact could change the answer.</p></div>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
+
+==========================================================================================
+FILE: src/components/app/NotificationBell.tsx
+==========================================================================================
+
+==========================================================================================
+FILE: src/components/ErrorBoundary.tsx
+==========================================================================================
