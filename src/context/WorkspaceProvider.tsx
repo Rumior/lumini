@@ -16,8 +16,6 @@ import {
   grossProfit,
   operatingResult,
 } from '@/lib/financial-engine'
-import { retrieveRelevantKnowledge } from '@/lib/knowledge-base'
-import { researchConnector } from '@/lib/research-connector'
 import { useAudit } from './AuditContext'
 import { useAuth } from './AuthContext'
 import { useOrganization } from './OrganizationContext'
@@ -35,7 +33,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { logEvent } = useAudit()
   const { user } = useAuth()
   const { organization } = useOrganization()
-  void researchConnector
   void logEvent
   void user
   void organization
@@ -96,58 +93,79 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const showToast = useCallback((message: string) => setToast(message), [])
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim()) return
-    const userMsg: Message = { id: Date.now(), from: 'user', text: text.trim() }
+    const question = text.trim()
+    if (!question || chatLoading) return
+
+    const userMsg: Message = {
+      id: Date.now(),
+      from: "user",
+      text: question
+    }
+
     setMessages(m => [...m, userMsg])
     setChatLoading(true)
+
     try {
-      let replyText = ''
-      if (organization?.id) {
-        try {
-          const res: any = await api.post(`/organizations/${organization.id}/ai/research`, { query: text })
-          if (res?.summary && res.summary.trim()) {
-            replyText = res.summary
+      if (!organization?.id) {
+        throw new Error("Please select or create a workspace before asking Lumini.")
+      }
+
+      const result = await api.post<{ summary?: string; error?: string }>(
+        `/organizations/${organization.id}/ai/research`,
+        {
+          query: question,
+          context: {
+            business,
+            finance,
+            actions,
+            metrics: {
+              grossProfit: gross,
+              grossMarginPercent: margin,
+              operatingResult: operating,
+              contributionPerUnit: contribution,
+              breakEvenUnits: breakEven
+            }
           }
-        } catch {}
-      }
-      if (!replyText) {
-        const kb = retrieveRelevantKnowledge(text, business.stage)
-        const needsResearch = /market|competitor|price|regulation|funding|trend/i.test(text)
-        let researchSummary = ''
-        if (needsResearch) {
-          try {
-            const r = await researchConnector.research(text, { business, finance, actions })
-            researchSummary = r.summary
-          } catch {}
         }
-        const advice: string[] = []
-        if (finance.price > 0 && finance.variable >= finance.price) advice.push('Your variable cost is >= price â€” review pricing/margins.')
-        if (finance.expenses > 0 && operating < 0) advice.push('Operating result negative â€” focus on cost control.')
-        if (kb.length) advice.push(`Relevant playbook: ${kb[0].title}.`)
-        if (researchSummary) advice.push(`Market intel: ${researchSummary}`)
-        replyText = advice.length ? advice.join(' ') : `Regarding "${text}", focus on unit economics (price vs variable cost), gross margin, and cash runway. Based on your current data: Gross margin ${margin.toFixed(1)}%, Operating result ${money(operating)}.`
+      )
+
+      if (!result.summary?.trim()) {
+        throw new Error(result.error || "Lumini returned an empty answer. Please try again.")
       }
-      const reply: Message = { 
-        id: Date.now()+1, 
-        from: 'lumini', 
-        text: replyText,
+
+      const reply: Message = {
+        id: Date.now() + 1,
+        from: "lumini",
+        text: result.summary,
         calculations: [
-          { label: 'Gross profit', value: money(gross) },
-          { label: 'Gross margin', value: `${(margin*100).toFixed(1)}%` },
-          { label: 'Operating result', value: money(operating) },
-          { label: 'Contribution/unit', value: money(contribution) },
-          { label: 'Break-even units', value: String(breakEven) },
+          { label: "Gross profit", value: money(gross) },
+          { label: "Gross margin", value: `${(margin * 100).toFixed(1)}%` },
+          { label: "Operating result", value: money(operating) },
+          { label: "Contribution/unit", value: money(contribution) },
+          { label: "Break-even units", value: String(breakEven) }
         ]
       }
+
       setMessages(m => [...m, reply])
-    } catch {
-      const reply: Message = { id: Date.now()+1, from: 'lumini', text: 'I need a moment. Could you rephrase your question or focus on a specific metric (pricing, costs, cash)?' }
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "An unexpected error occurred."
+
+      const reply: Message = {
+        id: Date.now() + 1,
+        from: "lumini",
+        text: `I couldn't answer that just now. ${message}`
+      }
+
       setMessages(m => [...m, reply])
     } finally {
       setChatLoading(false)
     }
-  }, [business, finance, actions, gross, margin, operating, contribution, breakEven, organization?.id])
-
+  }, [
+    chatLoading, organization?.id, business, finance, actions,
+    gross, margin, operating, contribution, breakEven
+  ])
   const exportCSV = useCallback(() => {
     const header = 'id,title,area,due,done,impact\n'
     const body = actions.map(a => `${a.id},"${a.title}",${a.area},${a.due},${a.done},${a.impact}`).join('\n')

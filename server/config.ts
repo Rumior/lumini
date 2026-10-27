@@ -7,7 +7,10 @@ const envSchema = z.object({
   APP_ORIGIN: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
-  TRUST_PROXY: z.enum(["true", "false"]).default("false")
+  TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().default("gpt-4o-mini"),
+  AI_BASE_URL: z.string().url().default("https://api.openai.com/v1")
 });
 
 const parsed = envSchema.safeParse(process.env);
