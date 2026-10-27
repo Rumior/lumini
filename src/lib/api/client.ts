@@ -1,4 +1,7 @@
-const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+const configuredApiBase = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
+const API_BASE = /^https?:\/\/[^/]+$/i.test(configuredApiBase)
+  ? `${configuredApiBase}/api`
+  : configuredApiBase
 
 export class ApiError extends Error {
   status: number
