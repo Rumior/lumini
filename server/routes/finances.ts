@@ -64,6 +64,34 @@ const transactionSchema = z.object({
   }
 });
 
+
+const reportedFiguresSchema = z.object({
+  periodStart: dateSchema,
+  periodEnd: dateSchema,
+  currency: z.string().trim().length(3).transform((v) => v.toUpperCase()),
+  revenue: z.number().finite().min(0).max(999999999999.99),
+  directCosts: z.number().finite().min(0).max(999999999999.99),
+  operatingExpenses: z.number().finite().min(0).max(999999999999.99),
+}).strict().superRefine((data, ctx) => {
+  if (data.periodStart > data.periodEnd) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["periodEnd"],
+      message: "Period end must not be before period start",
+    });
+  }
+
+  for (const field of ["revenue", "directCosts", "operatingExpenses"] as const) {
+    if (Math.round(data[field] * 100) !== data[field] * 100) {
+      ctx.addIssue({
+        code: "custom",
+        path: [field],
+        message: "Amount must have no more than two decimal places",
+      });
+    }
+  }
+});
+
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Authentication required" });
@@ -118,6 +146,161 @@ function periodBounds(period: string, date: string) {
     end: new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10)
   };
 }
+
+
+router.get("/reported-figures", requireAuth, async (req, res) => {
+  const organizationId = getOrganizationId(req);
+  const periodStart = req.query.periodStart;
+  const periodEnd = req.query.periodEnd;
+  const currency = req.query.currency;
+
+  if (
+    typeof periodStart !== "string" ||
+    typeof periodEnd !== "string" ||
+    typeof currency !== "string"
+  ) {
+    return res.status(400).json({
+      error: "periodStart, periodEnd and currency are required",
+    });
+  }
+
+  const parsed = reportedFiguresSchema.safeParse({
+    periodStart,
+    periodEnd,
+    currency,
+    revenue: 0,
+    directCosts: 0,
+    operatingExpenses: 0,
+  });
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid reporting period",
+      details: parsed.error.issues,
+    });
+  }
+
+  try {
+    const reportedFigure = await withTenantTransaction(
+      req.session.userId!,
+      organizationId,
+      async (client) => {
+        const result = await client.query(
+          `SELECT
+             id,
+             period_start::text AS period_start,
+             period_end::text AS period_end,
+             currency,
+             revenue,
+             direct_costs,
+             operating_expenses,
+             notes,
+             updated_at
+           FROM public.reported_financial_figures
+           WHERE organization_id = $1
+             AND period_start = $2
+             AND period_end = $3
+             AND currency = $4
+           LIMIT 1`,
+          [
+            organizationId,
+            parsed.data.periodStart,
+            parsed.data.periodEnd,
+            parsed.data.currency,
+          ],
+        );
+
+        return result.rows[0] ?? null;
+      },
+    );
+
+    return res.json({ reportedFigure });
+  } catch (error: any) {
+    if (error.code === "TENANT_ACCESS_DENIED") {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+    throw error;
+  }
+});
+
+router.put("/reported-figures", requireAuth, requireCsrf, async (req, res) => {
+  const organizationId = getOrganizationId(req);
+  const parsed = reportedFiguresSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid reported figures",
+      details: parsed.error.issues,
+    });
+  }
+
+  try {
+    const reportedFigure = await withTenantTransaction(
+      req.session.userId!,
+      organizationId,
+      async (client) => {
+        const data = parsed.data;
+
+        const result = await client.query(
+          `INSERT INTO public.reported_financial_figures (
+             organization_id,
+             period_start,
+             period_end,
+             currency,
+             revenue,
+             direct_costs,
+             operating_expenses,
+             created_by,
+             updated_by,
+             created_at,
+             updated_at
+           )
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, NOW(), NOW())
+           ON CONFLICT (
+             organization_id,
+             period_start,
+             period_end,
+             currency
+           )
+           DO UPDATE SET
+             revenue = EXCLUDED.revenue,
+             direct_costs = EXCLUDED.direct_costs,
+             operating_expenses = EXCLUDED.operating_expenses,
+             updated_by = EXCLUDED.updated_by,
+             updated_at = NOW()
+           RETURNING
+             id,
+             period_start::text AS period_start,
+             period_end::text AS period_end,
+             currency,
+             revenue,
+             direct_costs,
+             operating_expenses,
+             updated_at`,
+          [
+            organizationId,
+            data.periodStart,
+            data.periodEnd,
+            data.currency,
+            data.revenue,
+            data.directCosts,
+            data.operatingExpenses,
+            req.session.userId,
+          ],
+        );
+
+        return result.rows[0];
+      },
+    );
+
+    return res.json({ reportedFigure });
+  } catch (error: any) {
+    if (error.code === "TENANT_ACCESS_DENIED") {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+    throw error;
+  }
+});
 
 router.get("/dashboard", requireAuth, async (req, res) => {
   const organizationId = getOrganizationId(req);

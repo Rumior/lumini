@@ -5,7 +5,9 @@ import { useWorkspace } from '@/context/workspace-context'
 import { money } from '@/lib/format'
 import { mockDates } from '@/data/mock-data'
 import type { Finance } from '@/types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api/client'
+import { useOrganization } from '@/context/OrganizationContext'
 import FinanceLedger from '@/views/FinanceLedger'
 import { breakEvenUnits, contributionPerUnit, grossMargin } from '@/lib/financial-engine'
 
@@ -20,10 +22,83 @@ const unitFields: { k: keyof Finance; l: string }[] = [
   { k: 'fixed', l: 'Monthly fixed costs' },
 ]
 
+
+type ReportedFiguresResponse = {
+  reportedFigure: {
+    revenue: number | string;
+    direct_costs: number | string;
+    operating_expenses: number | string;
+  } | null;
+};
+
 export default function FinancesView() {
   const { finance, setFinance, gross, margin, operating, contribution, breakEven, cashData, exportCSV } = useWorkspace()
   const setField = (k: keyof Finance) => (e: React.ChangeEvent<HTMLInputElement>) => setFinance(f => ({ ...f, [k]: Number(e.target.value) }))
   const [scenario, setScenario] = useState({ priceDelta: 0, volumeDelta: 0, costDelta: 0 })
+  const { organization } = useOrganization()
+  const [reportedStatus, setReportedStatus] = useState("Loading saved figures…")
+  const [reportedLoadedFor, setReportedLoadedFor] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const orgId = organization?.id
+    setReportedLoadedFor(null)
+
+    if (!orgId) {
+      setReportedStatus("Select an organization to load figures")
+      return () => { cancelled = true }
+    }
+
+    const path = "/organizations/" + encodeURIComponent(orgId) +
+      "/finances/reported-figures?periodStart=2026-09-01&periodEnd=2026-09-30&currency=KES"
+
+    setReportedStatus("Loading saved figures…")
+
+    api.get<ReportedFiguresResponse>(path).then(result => {
+      if (cancelled) return
+
+      const row = result.reportedFigure
+      setFinance(current => ({
+        ...current,
+        revenue: row ? Number(row.revenue) : 0,
+        direct: row ? Number(row.direct_costs) : 0,
+        expenses: row ? Number(row.operating_expenses) : 0,
+      }))
+
+      setReportedLoadedFor(orgId)
+      setReportedStatus(row ? "Saved figures loaded" : "No saved figures for September 2026")
+    }).catch((error: unknown) => {
+      if (cancelled) return
+      setReportedStatus(error instanceof Error ? "Load failed: " + error.message : "Could not load figures")
+    })
+
+    return () => { cancelled = true }
+  }, [organization?.id, setFinance])
+
+  const saveReportedFigures = async () => {
+    const orgId = organization?.id
+    if (!orgId || reportedLoadedFor !== orgId) return
+
+    setReportedStatus("Saving…")
+    try {
+      await api.put(
+        "/organizations/" + encodeURIComponent(orgId) + "/finances/reported-figures",
+        {
+          periodStart: "2026-09-01",
+          periodEnd: "2026-09-30",
+          currency: "KES",
+          revenue: Number(finance.revenue),
+          directCosts: Number(finance.direct),
+          operatingExpenses: Number(finance.expenses),
+        },
+      )
+      if (organization?.id === orgId) setReportedStatus("Saved to your organization")
+    } catch (error) {
+      setReportedStatus(error instanceof Error ? "Save failed: " + error.message : "Could not save figures")
+    }
+  }
+
+
 
   const scenPrice = finance.price * (1 + scenario.priceDelta / 100)
   const scenVar = finance.variable * (1 + scenario.costDelta / 100)
@@ -45,10 +120,14 @@ export default function FinancesView() {
             <div><p className="eyebrow">{mockDates.reportPeriodUpper}</p><h3>Your reported figures</h3></div>
             <EvidenceTag>User reported</EvidenceTag>
           </div>
+          <p role="status" aria-live="polite" className="reported-status">{reportedStatus}</p>
           {reportedFields.map(x => (
             <label className="money-field" key={x.k}>
               <span>{x.l}<small>{x.h}</small></span>
-              <div><i>KSh</i><input type="number" min="0" value={finance[x.k]} onChange={setField(x.k)} /></div>
+              <div><i>KSh</i><input type="number" min="0" value={finance[x.k]}
+                onChange={setField(x.k)}
+                onBlur={() => { void saveReportedFigures() }}
+                disabled={!organization || reportedLoadedFor !== organization.id} /></div>
             </label>
           ))}
           <div className="formula-note"><AlertCircle size={16} /><p>Profit is not cash movement. Receivables, inventory, debt and owner withdrawals are not included here.</p></div>
