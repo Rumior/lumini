@@ -4,7 +4,15 @@ import { EvidenceTag } from '@/components/app/EvidenceTag'
 import { useWorkspace } from '@/context/workspace-context'
 import { useGo } from '@/hooks/use-go'
 import { mockPromptChips, mockTopics } from '@/data/mock-data'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
+function prepareAiResponse(text: string) {
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\r\n/g, '\n')
+}
 const topicIcons = { diagnose: TrendingUp, compare: SlidersHorizontal, numbers: Calculator }
 
 export default function MentorView() {
@@ -36,7 +44,15 @@ export default function MentorView() {
               <div className={`message ${m.from}`} key={m.id}>
                 {m.from === 'lumini' && <span className="mentor-seal"><Sparkles size={16} /></span>}
                 <div>
-                  <p>{m.text}</p>
+                  {m.from === 'lumini' ? (
+  <div className="message-content markdown-content">
+    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      {prepareAiResponse(m.text)}
+    </ReactMarkdown>
+  </div>
+) : (
+  <p>{m.text}</p>
+)}
                   {m.detail && <small><BookOpen size={13} />{m.detail}</small>}
                   {m.from === 'lumini' && m.id !== 1 && <button className="message-action" onClick={() => openNewAction(m.text.split('.')[0])}><Plus size={14} />Turn into an action</button>}
                 </div>
