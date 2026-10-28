@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api } from '@/lib/api/client'
 import { useOrganization } from '@/context/OrganizationContext'
+import FinanceDashboard from '@/views/FinanceDashboard'
 
 type Account = {
   id: string
@@ -92,6 +93,7 @@ export default function FinanceLedger() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [dashboardRefresh, setDashboardRefresh] = useState(0)
 
   const load = useCallback(async () => {
     if (!organization?.id) {
@@ -107,6 +109,7 @@ export default function FinanceLedger() {
         `/organizations/${organization.id}/finances?period=${period}&date=${date}`,
       )
       setData(result)
+      setDashboardRefresh(v => v + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load financial records.')
     } finally {
@@ -316,6 +319,11 @@ export default function FinanceLedger() {
         </label>
       </div>
 
+      <FinanceDashboard
+        organizationId={organization?.id}
+        date={date}
+        refreshToken={dashboardRefresh}
+      />
       <div className="ledger-account-grid">
         {accounts.map(account => (
           <article className="ledger-account" key={account.id}>

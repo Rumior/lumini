@@ -119,6 +119,102 @@ function periodBounds(period: string, date: string) {
   };
 }
 
+router.get("/dashboard", requireAuth, async (req, res) => {
+  const organizationId = getOrganizationId(req);
+  const date = typeof req.query.date === "string"
+    ? req.query.date
+    : new Date().toISOString().slice(0, 10);
+
+  if (!dateSchema.safeParse(date).success) {
+    return res.status(400).json({ error: "Date must be a valid YYYY-MM-DD date" });
+  }
+
+  try {
+    const result = await withTenantTransaction(
+      req.session.userId!,
+      organizationId,
+      async (client) => {
+        const monthlyResult = await client.query(
+          `SELECT
+             to_char(date_trunc('month', t.transaction_date), 'YYYY-MM') AS month,
+             a.currency,
+             COALESCE(SUM(t.amount) FILTER (WHERE t.transaction_type = 'income'), 0) AS income,
+             COALESCE(SUM(t.amount) FILTER (WHERE t.transaction_type = 'expense'), 0) AS expenses
+           FROM public.financial_transactions t
+           JOIN public.financial_accounts a
+             ON a.id = t.account_id AND a.organization_id = t.organization_id
+           WHERE t.organization_id = $1
+             AND t.transaction_date >= date_trunc('month', $2::date) - INTERVAL '11 months'
+             AND t.transaction_date < date_trunc('month', $2::date) + INTERVAL '1 month'
+             AND t.transaction_type IN ('income', 'expense')
+           GROUP BY date_trunc('month', t.transaction_date), a.currency
+           ORDER BY month, a.currency`,
+          [organizationId, date]
+        );
+
+        const categoryResult = await client.query(
+          `SELECT
+             a.currency,
+             t.category,
+             SUM(t.amount) AS total
+           FROM public.financial_transactions t
+           JOIN public.financial_accounts a
+             ON a.id = t.account_id AND a.organization_id = t.organization_id
+           WHERE t.organization_id = $1
+             AND t.transaction_type = 'expense'
+             AND t.transaction_date >= date_trunc('month', $2::date) - INTERVAL '11 months'
+             AND t.transaction_date < date_trunc('month', $2::date) + INTERVAL '1 month'
+           GROUP BY a.currency, t.category
+           ORDER BY a.currency, total DESC`,
+          [organizationId, date]
+        );
+
+        const accountsResult = await client.query(
+          `SELECT
+             a.id, a.name, a.account_type, a.currency,
+             a.opening_balance, a.opening_balance_date,
+             a.opening_balance + COALESCE((
+               SELECT SUM(
+                 CASE
+                   WHEN t.account_id = a.id
+                     AND t.transaction_type IN ('income', 'capital')
+                     THEN t.amount
+                   WHEN t.account_id = a.id
+                     AND t.transaction_type IN ('expense', 'withdrawal', 'transfer')
+                     THEN -t.amount
+                   WHEN t.transfer_to_account_id = a.id
+                     AND t.transaction_type = 'transfer'
+                     THEN t.amount
+                   ELSE 0
+                 END
+               )
+               FROM public.financial_transactions t
+               WHERE t.organization_id = a.organization_id
+                 AND t.transaction_date >= a.opening_balance_date
+                 AND (t.account_id = a.id OR t.transfer_to_account_id = a.id)
+             ), 0) AS current_balance
+           FROM public.financial_accounts a
+           WHERE a.organization_id = $1
+           ORDER BY a.created_at ASC`,
+          [organizationId]
+        );
+
+        return {
+          monthly: monthlyResult.rows,
+          expenseCategories: categoryResult.rows,
+          accounts: accountsResult.rows
+        };
+      }
+    );
+
+    return res.json(result);
+  } catch (error: any) {
+    if (error.code === "TENANT_ACCESS_DENIED") {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+    throw error;
+  }
+});
 router.get("/", requireAuth, async (req, res) => {
   const organizationId = getOrganizationId(req);
   const period = typeof req.query.period === "string" ? req.query.period : "month";
