@@ -355,26 +355,37 @@ export default function FinanceLedger() {
 
       <div className="ledger-history">
         <div className="section-head">
-          <div><p className="eyebrow">LATEST SAVED ENTRIES</p><h4>Transaction history</h4></div>
-          <button type="button" className="secondary-btn" onClick={() => void load()} disabled={loading}>
-            Refresh
-          </button>
+          <div className="ledger-history-title">
+            <p className="eyebrow">POSTED RECORDS · DATABASE-BACKED</p>
+            <h4>Transaction history</h4>
+            <p className="ledger-history-subtitle">A clear record of money moving through your accounts.</p>
+          </div>
+          <div className="ledger-history-tools">
+            <span className="ledger-record-count">{transactions.length} records loaded</span>
+            <button type="button" className="secondary-btn" onClick={() => void load()} disabled={loading}>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
         </div>
         {transactions.length === 0 ? (
           <p className="ledger-message">No transactions recorded yet.</p>
         ) : (
           <div className="ledger-table-wrap">
-            <table className="ledger-table">
+            <table className="ledger-table ledger-records-table">
               <thead><tr><th>Date</th><th>Transaction</th><th>Account</th><th>Description</th><th>Amount</th></tr></thead>
               <tbody>
                 {transactions.map(transaction => (
                   <tr key={transaction.id}>
                     <td>{String(transaction.transaction_date).slice(0, 10)}</td>
-                    <td>{transaction.transaction_type === 'income' ? 'Income'
-                      : transaction.transaction_type === 'expense' ? 'Expense'
-                      : transaction.transaction_type === 'transfer' ? 'Transfer'
-                      : transaction.transaction_type === 'capital' ? 'Capital'
-                      : 'Withdrawal'}</td>
+                    <td>
+                      <span className={`ledger-record-type ledger-record-type-${transaction.transaction_type}`}>
+                        {transaction.transaction_type === 'income' ? 'Income'
+                          : transaction.transaction_type === 'expense' ? 'Expense'
+                          : transaction.transaction_type === 'transfer' ? 'Transfer'
+                          : transaction.transaction_type === 'capital' ? 'Capital'
+                          : 'Withdrawal'}
+                      </span>
+                    </td>
                     <td>{transaction.account_name}{transaction.transaction_type === 'transfer' && transaction.transfer_to_account_name ? ` → ${transaction.transfer_to_account_name}` : ''}</td>
                     <td><strong>{transaction.description}</strong><small>{transaction.category}{transaction.reference ? ` · ${transaction.reference}` : ''}</small></td>
                     <td className={transaction.transaction_type === 'income' || transaction.transaction_type === 'capital' ? 'positive' : transaction.transaction_type === 'expense' || transaction.transaction_type === 'withdrawal' ? 'negative' : ''}>
