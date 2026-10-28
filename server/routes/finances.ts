@@ -1,4 +1,4 @@
-﻿import { Router, type Request, type Response, type NextFunction } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { withTenantTransaction } from "../lib/tenant-transaction.js";
@@ -297,7 +297,7 @@ router.post("/transactions", requireAuth, requireCsrf, async (req, res) => {
         const ids = [data.accountId, ...(data.transferToAccountId ? [data.transferToAccountId] : [])];
 
         const accountResult = await client.query(
-          `SELECT id, currency, opening_balance_date
+          `SELECT id, currency, opening_balance_date::text AS opening_balance_date
            FROM public.financial_accounts
            WHERE organization_id = $1 AND id = ANY($2::uuid[])
            ORDER BY id
