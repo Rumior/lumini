@@ -21,8 +21,8 @@ type DashboardAccount = {
   current_balance: string | number
 }
 
-type MonthlyRecord = {
-  month: string
+type TrendRecord = {
+  period_key: string
   currency: string
   income: string | number
   expenses: string | number
@@ -35,13 +35,14 @@ type ExpenseCategory = {
 }
 
 type DashboardData = {
-  monthly: MonthlyRecord[]
+  trend: TrendRecord[]
   expenseCategories: ExpenseCategory[]
   accounts: DashboardAccount[]
 }
 
 type Props = {
   organizationId?: string
+  period: 'day' | 'month' | 'year'
   date: string
   refreshToken: number
 }
@@ -60,12 +61,7 @@ function money(value: number, currency: string) {
   }
 }
 
-function monthLabel(key: string) {
-  const [year, month] = key.split('-').map(Number)
-  return new Date(year, month - 1, 1).toLocaleDateString('en-KE', { month: 'short', year: '2-digit' })
-}
-
-export default function FinanceDashboard({ organizationId, date, refreshToken }: Props) {
+export default function FinanceDashboard({ organizationId, period, date, refreshToken }: Props) {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -82,12 +78,12 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
     setError('')
 
     api.get<DashboardData>(
-      `/organizations/${organizationId}/finances/dashboard?date=${encodeURIComponent(date)}`,
+      `/organizations/${organizationId}/finances/dashboard?period=${period}&date=${encodeURIComponent(date)}`,
     ).then(result => {
       if (cancelled) return
       setData(result)
       const currencies = Array.from(new Set([
-        ...result.monthly.map(row => row.currency),
+        ...result.trend.map(row => row.currency),
         ...result.expenseCategories.map(row => row.currency),
         ...result.accounts.map(row => row.currency),
       ])).sort()
@@ -102,34 +98,54 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
     })
 
     return () => { cancelled = true }
-  }, [organizationId, date, refreshToken])
+  }, [organizationId, period, date, refreshToken])
 
-  const monthlyChart = useMemo(() => {
+  const periodLabel = period === 'day' ? 'Daily' : period === 'month' ? 'Monthly' : 'Yearly'
+  const periodDescription = period === 'day' ? 'selected day' : period === 'month' ? 'selected month' : 'selected year'
+
+  const trendChart = useMemo(() => {
     const selected = new Date(`${date}T12:00:00`)
     if (Number.isNaN(selected.getTime())) return []
 
-    const months: string[] = []
-    for (let offset = 11; offset >= 0; offset -= 1) {
-      const monthDate = new Date(selected.getFullYear(), selected.getMonth() - offset, 1)
-      months.push(`${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`)
+    let keys: string[] = []
+    if (period === 'day') {
+      keys = [date]
+    } else if (period === 'month') {
+      const year = selected.getFullYear()
+      const month = selected.getMonth()
+      const days = new Date(year, month + 1, 0).getDate()
+      keys = Array.from({ length: days }, (_, index) =>
+        `${year}-${String(month + 1).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`)
+    } else {
+      const year = selected.getFullYear()
+      keys = Array.from({ length: 12 }, (_, index) =>
+        `${year}-${String(index + 1).padStart(2, '0')}`)
     }
 
     const records = new Map(
-      (data?.monthly ?? [])
+      (data?.trend ?? [])
         .filter(row => row.currency === currency)
-        .map(row => [row.month, row]),
+        .map(row => [row.period_key, row]),
     )
 
-    return months.map(month => {
-      const record = records.get(month)
+    return keys.map(key => {
+      const record = records.get(key)
+      const label = period === 'year'
+        ? new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1)
+            .toLocaleDateString('en-KE', { month: 'short' })
+        : period === 'month'
+          ? String(Number(key.slice(8, 10)))
+          : new Date(`${key}T12:00:00`)
+              .toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })
+
       return {
-        month,
-        label: monthLabel(month),
+        period_key: key,
+        label,
         income: Number(record?.income ?? 0),
         expenses: Number(record?.expenses ?? 0),
       }
     })
-  }, [data, date, currency])
+  }, [data, date, currency, period])
 
   const categories = useMemo(
     () => (data?.expenseCategories ?? [])
@@ -141,9 +157,9 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
   )
 
   const accounts = (data?.accounts ?? []).filter(account => account.currency === currency)
-  const hasTransactions = monthlyChart.some(row => row.income > 0 || row.expenses > 0)
-  const totalIncome = monthlyChart.reduce((sum, row) => sum + row.income, 0)
-  const totalExpenses = monthlyChart.reduce((sum, row) => sum + row.expenses, 0)
+  const hasTransactions = trendChart.some(row => row.income > 0 || row.expenses > 0)
+  const totalIncome = trendChart.reduce((sum, row) => sum + row.income, 0)
+  const totalExpenses = trendChart.reduce((sum, row) => sum + row.expenses, 0)
 
   return (
     <section className="finance-dashboard" aria-label="Financial dashboard">
@@ -151,13 +167,13 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
         <div>
           <p className="eyebrow">FINANCIAL OVERVIEW</p>
           <h4>Performance at a glance</h4>
-          <p className="ledger-subtitle">Based on saved transactions, not forecast assumptions.</p>
+          <p className="ledger-subtitle">Based on saved transactions for the {periodDescription}, not forecast assumptions.</p>
         </div>
         <label className="dashboard-currency">
           Currency
           <select value={currency} onChange={event => setCurrency(event.target.value)} disabled={!data}>
             {Array.from(new Set([
-              ...(data?.monthly ?? []).map(row => row.currency),
+              ...(data?.trend ?? []).map(row => row.currency),
               ...(data?.expenseCategories ?? []).map(row => row.currency),
               ...(data?.accounts ?? []).map(row => row.currency),
             ])).sort().map(code => <option value={code} key={code}>{code}</option>)}
@@ -171,15 +187,15 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
 
       <div className="dashboard-metrics">
         <article className="dashboard-metric">
-          <span>12-month income</span>
+          <span>{periodLabel} income</span>
           <strong>{money(totalIncome, currency)}</strong>
         </article>
         <article className="dashboard-metric">
-          <span>12-month expenses</span>
+          <span>{periodLabel} expenses</span>
           <strong>{money(totalExpenses, currency)}</strong>
         </article>
         <article className="dashboard-metric">
-          <span>12-month operating result</span>
+          <span>{periodLabel} operating result</span>
           <strong className={totalIncome - totalExpenses >= 0 ? 'positive' : 'negative'}>
             {money(totalIncome - totalExpenses, currency)}
           </strong>
@@ -189,14 +205,14 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
       <div className="dashboard-chart-grid">
         <article className="dashboard-chart-card">
           <div className="dashboard-card-heading">
-            <div><p className="eyebrow">12-MONTH TREND</p><h5>Income vs expenses</h5></div>
+            <div><p className="eyebrow">{periodLabel.toUpperCase()} TREND</p><h5>Income vs expenses</h5></div>
           </div>
           {!hasTransactions ? (
             <p className="dashboard-empty">No income or expense transactions are available for this currency and period yet.</p>
           ) : (
             <div className="dashboard-chart">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyChart} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
+                <BarChart data={trendChart} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e7e1d7" />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#77756f' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#77756f' }} axisLine={false} tickLine={false} width={52} />
@@ -211,7 +227,7 @@ export default function FinanceDashboard({ organizationId, date, refreshToken }:
 
         <article className="dashboard-chart-card">
           <div className="dashboard-card-heading">
-            <div><p className="eyebrow">EXPENSE CONTROL · LAST 12 MONTHS</p><h5>Expense categories</h5></div>
+            <div><p className="eyebrow">EXPENSE CONTROL · {periodDescription.toUpperCase()}</p><h5>Expense categories</h5></div>
           </div>
           {categories.length === 0 ? (
             <p className="dashboard-empty">No saved expenses are available for this currency and period yet.</p>

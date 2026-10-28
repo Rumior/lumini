@@ -321,6 +321,7 @@ export default function FinanceLedger() {
 
       <FinanceDashboard
         organizationId={organization?.id}
+        period={period}
         date={date}
         refreshToken={dashboardRefresh}
       />

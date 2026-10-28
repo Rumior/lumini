@@ -124,19 +124,32 @@ router.get("/dashboard", requireAuth, async (req, res) => {
   const date = typeof req.query.date === "string"
     ? req.query.date
     : new Date().toISOString().slice(0, 10);
+  const period = typeof req.query.period === "string"
+    ? req.query.period
+    : "month";
+
+  if (!["day", "month", "year"].includes(period)) {
+    return res.status(400).json({ error: "Period must be day, month, or year" });
+  }
 
   if (!dateSchema.safeParse(date).success) {
     return res.status(400).json({ error: "Date must be a valid YYYY-MM-DD date" });
   }
+
+  const { start, end } = periodBounds(period, date);
 
   try {
     const result = await withTenantTransaction(
       req.session.userId!,
       organizationId,
       async (client) => {
-        const monthlyResult = await client.query(
+        const trendResult = await client.query(
           `SELECT
-             to_char(date_trunc('month', t.transaction_date), 'YYYY-MM') AS month,
+             CASE
+               WHEN $4::text = 'year'
+                 THEN to_char(date_trunc('month', t.transaction_date), 'YYYY-MM')
+               ELSE to_char(t.transaction_date::date, 'YYYY-MM-DD')
+             END AS period_key,
              a.currency,
              COALESCE(SUM(t.amount) FILTER (WHERE t.transaction_type = 'income'), 0) AS income,
              COALESCE(SUM(t.amount) FILTER (WHERE t.transaction_type = 'expense'), 0) AS expenses
@@ -144,12 +157,12 @@ router.get("/dashboard", requireAuth, async (req, res) => {
            JOIN public.financial_accounts a
              ON a.id = t.account_id AND a.organization_id = t.organization_id
            WHERE t.organization_id = $1
-             AND t.transaction_date >= date_trunc('month', $2::date) - INTERVAL '11 months'
-             AND t.transaction_date < date_trunc('month', $2::date) + INTERVAL '1 month'
+             AND t.transaction_date >= $2::date
+             AND t.transaction_date < $3::date
              AND t.transaction_type IN ('income', 'expense')
-           GROUP BY date_trunc('month', t.transaction_date), a.currency
-           ORDER BY month, a.currency`,
-          [organizationId, date]
+           GROUP BY period_key, a.currency
+           ORDER BY period_key, a.currency`,
+          [organizationId, start, end, period]
         );
 
         const categoryResult = await client.query(
@@ -162,11 +175,11 @@ router.get("/dashboard", requireAuth, async (req, res) => {
              ON a.id = t.account_id AND a.organization_id = t.organization_id
            WHERE t.organization_id = $1
              AND t.transaction_type = 'expense'
-             AND t.transaction_date >= date_trunc('month', $2::date) - INTERVAL '11 months'
-             AND t.transaction_date < date_trunc('month', $2::date) + INTERVAL '1 month'
+             AND t.transaction_date >= $2::date
+             AND t.transaction_date < $3::date
            GROUP BY a.currency, t.category
            ORDER BY a.currency, total DESC`,
-          [organizationId, date]
+          [organizationId, start, end]
         );
 
         const accountsResult = await client.query(
@@ -191,16 +204,22 @@ router.get("/dashboard", requireAuth, async (req, res) => {
                FROM public.financial_transactions t
                WHERE t.organization_id = a.organization_id
                  AND t.transaction_date >= a.opening_balance_date
+                 AND t.transaction_date < ($2::date + INTERVAL '1 day')
                  AND (t.account_id = a.id OR t.transfer_to_account_id = a.id)
              ), 0) AS current_balance
            FROM public.financial_accounts a
            WHERE a.organization_id = $1
+             AND a.opening_balance_date::date <= $2::date
            ORDER BY a.created_at ASC`,
-          [organizationId]
+          [organizationId, date]
         );
 
         return {
-          monthly: monthlyResult.rows,
+          period,
+          date,
+          start,
+          end,
+          trend: trendResult.rows,
           expenseCategories: categoryResult.rows,
           accounts: accountsResult.rows
         };
