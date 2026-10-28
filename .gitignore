@@ -28,3 +28,8 @@ dist-ssr
 .env.*
 !.env.example
 !.env.*.example
+
+# Local session data and temporary backups
+* cookies*.txt
+*cookie*.txt
+*.bak

@@ -583,3 +583,136 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; }
     padding: 8px;
   }
 }
+
+/* Live financial ledger */
+.ledger-panel {
+  margin: 20px 0 26px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--ivory-50);
+}
+.ledger-heading { align-items: flex-start; gap: 16px; }
+.ledger-heading h3 { margin: 5px 0; }
+.ledger-subtitle, .ledger-message, .ledger-hint {
+  color: var(--ink-400);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.ledger-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ledger-actions button, .ledger-history button { white-space: nowrap; }
+.ledger-panel .primary-btn, .ledger-panel .secondary-btn {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.ledger-panel .primary-btn { background: var(--ink-900); color: white; }
+.ledger-panel .secondary-btn { background: var(--ivory-100); color: var(--ink-900); }
+.ledger-panel button:disabled { opacity: .5; cursor: not-allowed; }
+.ledger-form {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: white;
+}
+.ledger-form h4, .ledger-history h4 { margin: 0 0 14px; }
+.ledger-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.ledger-form-grid label, .ledger-period label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink-400);
+  font-size: 11px;
+}
+.ledger-form-grid input, .ledger-form-grid select,
+.ledger-period input, .ledger-period select {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--ivory-50);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: 12px;
+}
+.ledger-hint { margin: 12px 0; }
+.ledger-error, .ledger-success, .ledger-message {
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--line);
+}
+.ledger-error { color: #9b3028; }
+.ledger-success, .positive { color: #28744a; }
+.negative { color: #a63e36; }
+.ledger-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 20px 0 14px;
+}
+.ledger-period label { min-width: 145px; }
+.ledger-account-grid, .ledger-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.ledger-account, .ledger-summary {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: white;
+}
+.ledger-account > span, .ledger-account small {
+  display: block;
+  color: var(--ink-400);
+  font-size: 11px;
+}
+.ledger-account > strong {
+  display: block;
+  overflow-wrap: anywhere;
+  margin: 12px 0 8px;
+  font: 400 clamp(19px, 2vw, 27px) var(--serif);
+  color: var(--ink-900);
+}
+.ledger-account small { line-height: 1.5; }
+.ledger-summary .eyebrow { margin: 0 0 12px; }
+.ledger-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+.ledger-summary > div span { color: var(--ink-400); }
+.ledger-summary > div strong { text-align: right; overflow-wrap: anywhere; }
+.ledger-summary > small { display: block; margin-top: 12px; color: var(--ink-400); }
+.ledger-history { margin-top: 24px; }
+.ledger-table-wrap { width: 100%; overflow-x: auto; }
+.ledger-table { width: 100%; border-collapse: collapse; background: white; font-size: 11px; }
+.ledger-table th, .ledger-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.ledger-table th { color: var(--ink-400); font-weight: 600; }
+.ledger-table td:nth-child(4) { min-width: 170px; white-space: normal; }
+.ledger-table td strong, .ledger-table td small { display: block; }
+.ledger-table td small { margin-top: 4px; color: var(--ink-400); font-size: 10px; }
+@media (max-width: 750px) {
+  .ledger-panel { padding: 15px; }
+  .ledger-heading { flex-direction: column; }
+  .ledger-form-grid, .ledger-account-grid, .ledger-summary-grid { grid-template-columns: 1fr; }
+}

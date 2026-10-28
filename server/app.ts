@@ -13,6 +13,7 @@ import workspaceRoutes from "./routes/workspaces.js";
 import businessRoutes from "./routes/businesses.js";
 import actionRoutes from "./routes/actions.js";
 import aiRoutes from "./routes/ai.js";
+import financeRoutes from "./routes/finances.js";
 
 const app = express();
 const PgSession = connectPgSimple(session);
@@ -20,7 +21,6 @@ const PgSession = connectPgSimple(session);
 if (config.TRUST_PROXY) {
   app.set("trust proxy", 1);
 }
-
 app.disable("x-powered-by");
 
 app.use(helmet());
@@ -76,6 +76,7 @@ app.get("/api/health", async (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/organizations/:organizationId/finances", financeRoutes);
 app.use("/api/organizations/:organizationId/workspace", workspaceRoutes);
 app.use("/api/organizations/:organizationId/businesses", businessRoutes);
 app.use("/api/organizations/:organizationId/actions", actionRoutes);

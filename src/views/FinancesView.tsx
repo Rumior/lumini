@@ -6,6 +6,7 @@ import { money } from '@/lib/format'
 import { mockDates } from '@/data/mock-data'
 import type { Finance } from '@/types'
 import { useState } from 'react'
+import FinanceLedger from '@/views/FinanceLedger'
 import { breakEvenUnits, contributionPerUnit, grossMargin } from '@/lib/financial-engine'
 
 const reportedFields: { k: keyof Finance; l: string; h: string }[] = [
@@ -37,6 +38,7 @@ export default function FinancesView() {
         <button className="secondary-btn" onClick={exportCSV}><Download size={16} />Export summary</button>
       </div>
 
+      <FinanceLedger />
       <div className="finance-layout">
         <article className="finance-inputs">
           <div className="section-head">
@@ -59,12 +61,12 @@ export default function FinancesView() {
             <strong>{money(operating)}</strong>
             <small className={operating >= 0 ? 'positive' : 'negative'}>
               {operating >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-              {finance.revenue ? ((operating / finance.revenue) * 100).toFixed(1) : 0}% of revenue · before unreported items
+              {finance.revenue ? ((operating / finance.revenue) * 100).toFixed(1) : 0}% of revenue - before unreported items
             </small>
           </div>
           <div className="result-pair">
-            <div><span>Gross profit</span><strong>{money(gross)}</strong><small>Revenue − direct costs</small></div>
-            <div><span>Gross margin</span><strong>{margin.toFixed(1)}%</strong><small>Gross profit ÷ revenue</small></div>
+            <div><span>Gross profit</span><strong>{money(gross)}</strong><small>Revenue - direct costs</small></div>
+            <div><span>Gross margin</span><strong>{margin.toFixed(1)}%</strong><small>Gross profit / revenue</small></div>
           </div>
           <div className="result-foot"><CheckCircle2 size={16} /><span>All values recalculate instantly from your inputs.</span></div>
         </article>
@@ -77,7 +79,7 @@ export default function FinancesView() {
           <p>See how price, variable cost and fixed overhead shape the number of units you need to sell.</p>
           <div className="break-result">
             <span>BREAK-EVEN VOLUME</span>
-            <strong>{breakEven || '—'} <small>units / month</small></strong>
+            <strong>{breakEven || '-'} <small>units / month</small></strong>
             <p>{contribution > 0 ? `Each unit contributes ${money(contribution)} toward fixed costs.` : 'Contribution is zero or negative. Break-even cannot be reached at these unit economics.'}</p>
           </div>
         </div>
@@ -99,7 +101,7 @@ export default function FinancesView() {
           <p>Test best/base/worst cases. All calculations use the deterministic financial engine.</p>
           <div className="break-result">
             <span>SCENARIO BREAK-EVEN</span>
-            <strong>{scenBE.feasible ? scenBE.units : '—'} <small>units / month</small></strong>
+            <strong>{scenBE.feasible ? scenBE.units : '-'} <small>units / month</small></strong>
             <p>{scenBE.feasible ? `With adjusted pricing/costs, each unit contributes ${money(scenContrib)}.` : scenBE.warning || 'Not feasible under these assumptions.'}</p>
             <p style={{ marginTop: '8px' }}>Scenario gross margin: <strong>{scenGrossMargin.toFixed(1)}%</strong></p>
           </div>
