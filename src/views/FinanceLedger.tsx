@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api } from '@/lib/api/client'
 import { useOrganization } from '@/context/OrganizationContext'
 
@@ -322,6 +322,7 @@ export default function FinanceLedger() {
             <span>{account.name}</span>
             <strong>{amount(account.current_balance, account.currency)}</strong>
             <small>{account.account_type.replace('_', ' ')} · Opening {amount(account.opening_balance, account.currency)}</small>
+            <small>Opening date: {String(account.opening_balance_date).slice(0, 10)}</small>
           </article>
         ))}
         {!loading && accounts.length === 0 && (
