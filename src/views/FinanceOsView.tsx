@@ -1,5 +1,3 @@
-import FinanceLedger from '@/views/FinanceLedger'
-
 export default function FinanceOsView() {
   return (
     <section className="view finance-os-native">
@@ -8,13 +6,11 @@ export default function FinanceOsView() {
           <p className="date-line">LUMINI FINANCE OS</p>
           <h1>Your financial command centre.</h1>
           <p>
-            Track recorded transactions, monitor performance, and manage your
-            business finances in one place.
+            Understand your business finances, monitor performance, and make
+            informed financial decisions in one place.
           </p>
         </div>
       </div>
-
-      <FinanceLedger />
     </section>
   )
 }
