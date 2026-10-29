@@ -86,8 +86,8 @@ $("#rpd").onclick=()=>dlg("Receivables & payables",rpHTML(),"Details",1);
 const un=BUD.map(([n,a,b,rev])=>[n,(a-b)/b*100,rev]).filter(x=>(x[2]?x[1]<-.5:x[1]>.5)).sort((p,q)=>Math.abs(q[1])-Math.abs(p[1]));
 $("#bud").innerHTML=`<div class="row"><div><div class="lbl">Budget · ${P[S.p].n}</div><h2>Actual vs budget</h2></div><button class="btn s" id="bd">Details</button></div>`+(part?`<p class="mu" style="margin:8px 0">No budget yet. Create a budget to compare actual performance against plan.</p><button class="btn s p" id="cbn">Create budget</button>`:`<div style="margin-top:8px"><b style="font:500 20px 'Cormorant Garamond',serif">${un.length} of ${BUD.length} lines unfavourable</b>${un.slice(0,2).map(x=>`<div class="bd2 sm">▲ ${x[0]} ${Math.abs(x[1]).toFixed(1)}% ${x[2]?"below":"over"} budget</div>`).join("")}<div class="mu sm">Revenue ${dl(BUD[0][1],BUD[0][2])} vs budget</div></div>`);
 $("#bd").onclick=()=>dlg("Actual vs budget",`<p class="mu">${P[S.p].n} · sample figures</p>`+budHTML()+`<p><button class="btn s" onclick="dm(5)">Open Budgets &amp; Forecasts</button></p>`,"Details",1);if($("#cbn"))$("#cbn").onclick=()=>dm(5)}
-function init(){$("#nv").innerHTML=NAVS.map(([n,i])=>`<${n=="Finances"?'a href="#" aria-current="page"':'button class="nv"'} data-n="${n}">${ic(i)}${n}${n.startsWith("Plans")?'<span class="bd">4</span>':""}</${n=="Finances"?"a":"button"}>`).join("");
-$$("#nv [data-n]").forEach(e=>e.onclick=v=>{v.preventDefault();e.dataset.n=="Finances"?scrollTo({top:0}):dest(e.dataset.n,"This area sits outside the Finance OS home screen.");$("#sb").classList.remove("open")});
+function init(){if($("#nv"))$("#nv").innerHTML=NAVS.map(([n,i])=>`<${n=="Finances"?'a href="#" aria-current="page"':'button class="nv"'} data-n="${n}">${ic(i)}${n}${n.startsWith("Plans")?'<span class="bd">4</span>':""}</${n=="Finances"?"a":"button"}>`).join("");
+if($("#nv"))$$("#nv [data-n]").forEach(e=>e.onclick=v=>{v.preventDefault();e.dataset.n=="Finances"?scrollTo({top:0}):dest(e.dataset.n,"This area sits outside the Finance OS home screen.");if($("#sb"))$("#sb").classList.remove("open")});
 $$("[data-i]").forEach(e=>e.insertAdjacentHTML("afterbegin",ic(e.dataset.i)));
 $("#qa").innerHTML=QA.map(([n,s,i],k)=>`<button class="btn ${k?"":"p"}" data-q="${k}" title="${n}">${ic(i)}<span class="t">${s}</span></button>`).join("");$$("[data-q]").forEach(b=>b.onclick=()=>dest(QA[b.dataset.q][0],QA[b.dataset.q][3]));
 $("#dr").innerHTML=`<button class="btn" id="bm">${ic("grid")}All modules</button><button class="btn" id="ba">${ic("clock")}Activity</button><button class="btn" id="bq">${ic("alert")}Data quality <span class="cnt">${DQ.length}</span></button>`;
@@ -105,11 +105,11 @@ $("#fresh").textContent=s=="stale"?"As of 26 Oct, 08:30":"As of 29 Oct, 08:30";a
 function rp(q){const it=[...QA.map(a=>[a[0],"Action",a[3]]),...M.map(m=>[m[0],"Module",m[2]])].filter(x=>x[0].toLowerCase().includes(q.toLowerCase()));$("#pl").innerHTML=it.length?it.map((x,i)=>`<button data-x="${i}">${x[0]}<small>${x[1]}</small></button>`).join(""):`<p class="mu" style="padding:14px">No matches. Try “loan” or “invoice”.</p>`;$$("#pl [data-x]").forEach(b=>b.onclick=()=>{$("#pal").close();dest(it[b.dataset.x][0],it[b.dataset.x][2])})}
 function pal(){$("#pq").value="";rp("");$("#pal").showModal();$("#pq").focus()}
 $("#pq").oninput=e=>rp(e.target.value);$("#pq").onkeydown=e=>{if(e.key=="Enter"){const b=$("#pl [data-x]");b&&b.click()}};
-$("#sr").onclick=pal;addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()=="k"){e.preventDefault();pal()}if(e.key=="Escape")$("#sb").classList.remove("open")});
+$("#sr").onclick=pal;addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()=="k"){e.preventDefault();pal()}if(e.key=="Escape"&&$("#sb"))$("#sb").classList.remove("open")});
 $("#per").onchange=e=>{if(e.target.value=="c"){e.target.value=S.p;return dest("Custom range","Pick start and end dates for period-based metrics. Cash and debt stay point-in-time.")}S.p=e.target.value;rKPI();rTiles()};
 $("#st").onchange=e=>{S.st=e.target.value;setSt()};
 $("#rf").onclick=()=>{if(S.st=="stale"){S.st="n";$("#st").value="n";setSt()}toast("Reloaded demo data. There is no live connection, so nothing was synced.")};
-$("#mb").onclick=()=>$("#sb").classList.toggle("open");
+if($("#mb")&&$("#sb"))$("#mb").onclick=()=>$("#sb").classList.toggle("open");
 $("#th").onclick=()=>{const r=document.documentElement,d=(r.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"))=="dark";r.dataset.theme=d?"light":"dark"};
 let rz;addEventListener("resize",()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(rChart)});
 init();setSt();
