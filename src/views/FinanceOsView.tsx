@@ -1,16 +1,20 @@
 export default function FinanceOsView() {
   return (
     <section className="view finance-os-native">
-      <div className="page-heading">
-        <div>
-          <p className="date-line">LUMINI FINANCE OS</p>
-          <h1>Your financial command centre.</h1>
-          <p>
-            Understand your business finances, monitor performance, and make
-            informed financial decisions in one place.
-          </p>
-        </div>
-      </div>
+      <iframe
+        src="/finance-os/dashboard.html"
+        title="Lumini Finance OS"
+        style={{
+          display: 'block',
+          width: '100%',
+          height: 'calc(100vh - 100px)',
+          minHeight: '700px',
+          border: 'none',
+          borderRadius: '12px',
+          background: '#faf6ee',
+        }}
+        sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+      />
     </section>
   )
 }
