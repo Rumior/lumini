@@ -100,7 +100,7 @@ export default function BusinessView() {
               <li key={c.label} className={c.done ? undefined : 'missing'}>{c.done ? <Check size={15} /> : <Plus size={15} />}{c.label}</li>
             ))}
           </ul>
-          <button onClick={() => go('finances')}>Review financial inputs <ArrowRight size={15} /></button>
+          <button onClick={() => go('finance-os')}>Review financial inputs <ArrowRight size={15} /></button>
           <div className="fact-legend">
             <strong>How facts are labelled</strong>
             <span><i className="reported" />User reported</span>

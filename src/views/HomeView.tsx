@@ -68,9 +68,9 @@ export default function HomeView() {
       </div>
 
       <div className="metric-strip">
-        <button onClick={() => go('finances')}><span>MONTHLY REVENUE <ArrowUpRight size={14} /></span><strong>{money(finance.revenue)}</strong><small>From your inputs</small></button>
-        <button onClick={() => go('finances')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= marginTarget.min && margin <= marginTarget.max ? `Within target` : `Review margins`}</small></button>
-        <button onClick={() => go('finances')}><span>OPERATING RESULT <ArrowUpRight size={14} /></span><strong>{money(operating)}</strong><small>Calculated</small></button>
+        <button onClick={() => go('finance-os')}><span>MONTHLY REVENUE <ArrowUpRight size={14} /></span><strong>{money(finance.revenue)}</strong><small>From your inputs</small></button>
+        <button onClick={() => go('finance-os')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= marginTarget.min && margin <= marginTarget.max ? `Within target` : `Review margins`}</small></button>
+        <button onClick={() => go('finance-os')}><span>OPERATING RESULT <ArrowUpRight size={14} /></span><strong>{money(operating)}</strong><small>Calculated</small></button>
         <button onClick={() => go('plans')}><span>ACTIONS COMPLETE <ArrowUpRight size={14} /></span><strong>{completed}<i> / {actions.length}</i></strong><small>{actions.length - completed} priorities still open</small></button>
       </div>
 
@@ -93,7 +93,7 @@ export default function HomeView() {
         <article className="cash-panel">
           <div className="section-head">
             <div><p className="eyebrow">CASH TRAJECTORY</p><h3>Stability check</h3></div>
-            <button className="icon-btn" onClick={() => go('finances')} aria-label="View finances"><TrendingUp size={18} /></button>
+            <button className="icon-btn" onClick={() => go('finance-os')} aria-label="View finances"><TrendingUp size={18} /></button>
           </div>
           <div className="cash-chart">
             <ResponsiveContainer width="100%" height={200}>

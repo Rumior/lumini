@@ -5,7 +5,7 @@ import type { View } from '@/types'
 
 const searchItems: { title: string; sub: string; view: View }[] = [
   ...nav.map(n => ({ title: n.label, sub: 'Navigate', view: n.id })),
-  { title: 'Pricing & break-even', sub: 'Financial tool', view: 'finances' },
+  { title: 'Pricing & break-even', sub: 'Financial tool', view: 'finance-os' },
   { title: 'Cash collection forecast', sub: 'Current action', view: 'plans' },
   { title: 'September financial health', sub: 'Report', view: 'insights' },
 ]
