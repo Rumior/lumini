@@ -7,7 +7,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 button,select,input{font:inherit;color:inherit}button{cursor:pointer}select{cursor:pointer}select option{background:var(--card);color:var(--ink)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .lbl{font:500 10px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.app{display:block;width:100%;min-height:100vh}
 aside{background:var(--sb);color:var(--sbt);position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));display:flex;flex-direction:column;padding:0 14px;overflow:auto;z-index:50}
 .brand{padding:20px 6px 16px;border-bottom:1px solid #ffffff1a;display:flex;gap:12px;align-items:center}
 .brand b{font:500 28px "Cormorant Garamond",serif;color:#fff;display:block;line-height:1}.brand span{font:500 9px "JetBrains Mono";letter-spacing:.2em;color:#9fb0c6}
@@ -75,5 +75,5 @@ dialog{border:1px solid var(--gold);background:var(--bg);color:var(--ink);max-wi
 .hide{display:none!important}svg text{font-family:Inter,sans-serif}
 @media (max-width:1250px){.qs .btn span.t{display:none}.tiles{grid-template-columns:1fr 1fr}.tiles>:last-child{grid-column:1/-1}}
 @media (max-width:1100px){.kpis{grid-template-columns:1fr 1fr}.mid{grid-template-columns:1fr}.tiles{grid-template-columns:1fr}.hg{grid-template-columns:1fr}.dock{flex-direction:column;align-items:stretch}.qs .btn span.t{display:inline}}
-@media (max-width:900px){.app{grid-template-columns:1fr}aside{position:fixed;inset:0 auto 0 0;width:260px;height:100%;transform:translateX(-100%);transition:transform .2s}aside.open{transform:none}#mb{display:grid}.top,.wrap{padding-left:14px;padding-right:14px}.srch{width:auto}.srch span.t,.srch kbd{display:none}}
+@media (max-width:900px){.top,.wrap{padding-left:14px;padding-right:14px}.srch{width:auto}.srch span.t,.srch kbd{display:none}}
 @media (max-width:600px){.kpis{grid-template-columns:1fr}.cols,.bg{grid-template-columns:1fr}.mg{grid-template-columns:1fr}.side{flex-direction:row;flex-wrap:wrap}}

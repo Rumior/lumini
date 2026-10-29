@@ -1,18 +1,20 @@
-import { useEffect } from 'react'
+import FinanceLedger from '@/views/FinanceLedger'
 
 export default function FinanceOsView() {
-  useEffect(() => {
-    // Ensure styles/scripts don't conflict with app theme
-  }, [])
-
   return (
-    <div style={{ width: '100%', height: 'calc(100vh - 140px)', minHeight: '600px' }}>
-      <iframe
-        src="/finance-os/dashboard.html"
-        title="Finance OS"
-        style={{ width: '100%', height: '100%', border: 'none', borderRadius: '12px', background: '#faf6ee' }}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-      />
-    </div>
+    <section className="view finance-os-native">
+      <div className="page-heading">
+        <div>
+          <p className="date-line">LUMINI FINANCE OS</p>
+          <h1>Your financial command centre.</h1>
+          <p>
+            Track recorded transactions, monitor performance, and manage your
+            business finances in one place.
+          </p>
+        </div>
+      </div>
+
+      <FinanceLedger />
+    </section>
   )
 }
