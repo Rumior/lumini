@@ -1,4 +1,4 @@
-export type View = 'home' | 'mentor' | 'business' | 'finances' | 'plans' | 'insights' | 'settings'
+export type View = 'home' | 'mentor' | 'business' | 'finances' | 'finance-os' | 'plans' | 'insights' | 'settings'
 
 export type User = {
   id: string

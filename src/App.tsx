@@ -12,6 +12,7 @@ const HomeView = lazy(() => import('@/views/HomeView'))
 const MentorView = lazy(() => import('@/views/MentorView'))
 const BusinessView = lazy(() => import('@/views/BusinessView'))
 const FinancesView = lazy(() => import('@/views/FinancesView'))
+const FinanceOsView = lazy(() => import('@/views/FinanceOsView'))
 const PlansView = lazy(() => import('@/views/PlansView'))
 const InsightsView = lazy(() => import('@/views/InsightsView'))
 const SettingsView = lazy(() => import('@/views/SettingsView'))
@@ -47,6 +48,7 @@ export default function App() {
           <Route path={routePaths.mentor} element={<Suspense fallback={<LoadingFallback />}><MentorView /></Suspense>} />
           <Route path={routePaths.business} element={<Suspense fallback={<LoadingFallback />}><BusinessView /></Suspense>} />
           <Route path={routePaths.finances} element={<Suspense fallback={<LoadingFallback />}><FinancesView /></Suspense>} />
+          <Route path={routePaths['finance-os']} element={<Suspense fallback={<LoadingFallback />}><FinanceOsView /></Suspense>} />
           <Route path={routePaths.plans} element={<Suspense fallback={<LoadingFallback />}><PlansView /></Suspense>} />
           <Route path={routePaths.insights} element={<Suspense fallback={<LoadingFallback />}><InsightsView /></Suspense>} />
           <Route path={routePaths.settings} element={<Suspense fallback={<LoadingFallback />}><SettingsView /></Suspense>} />
