@@ -469,3 +469,17 @@ button { -webkit-tap-highlight-color: transparent; }
   .page-content { animation: none; }
   .brand-mark, .metric-strip button, .action-row, .check-btn { transition: none; }
 }
+
+
+/* Finance OS dashboard is embedded inside the existing Lumini workspace shell. */
+.finance-os-view { width: 100%; min-width: 0; }
+.finance-os-frame {
+  display: block;
+  width: 100%;
+  min-height: 900px;
+  border: 0;
+  background: var(--ivory-50, #faf6ee);
+}
+@media (max-width: 760px) {
+  .finance-os-frame { min-height: 1200px; }
+}

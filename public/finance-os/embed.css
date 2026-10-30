@@ -1,0 +1,342 @@
+/* Embedded Finance OS: preserve Lumini's React application shell and navigation. */
+html, body { margin: 0; min-height: 0; }
+.app { display: block !important; min-height: 0 !important; }
+#sb, .top { display: none !important; }
+main { min-width: 0; width: 100%; }
+.wrap { padding: 20px 0 28px !important; min-height: 0 !important; gap: 12px; }
+.ph { align-items: flex-start; }
+.ph .ti h1 { font-size: 32px; }
+.ctl { justify-content: flex-start; }
+@media (max-width: 700px) {
+  .wrap { padding: 14px 0 20px !important; }
+  .ph .ti h1 { font-size: 29px; }
+}
+
+/* Compact single-screen Finance OS layout */
+html, body {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app, main {
+  height: 100%;
+  min-height: 0;
+}
+
+.wrap {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0 !important;
+  padding: 8px 0 6px !important;
+  gap: 6px !important;
+  overflow: hidden;
+}
+
+.ph {
+  flex: 0 0 auto;
+  gap: 6px 10px;
+}
+
+.ph .ti h1 {
+  font-size: 27px;
+}
+
+.ph .sub {
+  font-size: 10px;
+}
+
+.ctl {
+  gap: 4px;
+}
+
+.ctl .btn {
+  min-height: 26px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+
+#note:empty {
+  display: none;
+}
+
+#dash {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 6px !important;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dock {
+  min-height: 0;
+  gap: 4px;
+}
+
+.qs {
+  gap: 4px;
+  padding: 0;
+}
+
+.qs .btn {
+  min-height: 25px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+
+.kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 0;
+}
+
+.card {
+  padding: 8px 10px;
+}
+
+.kp {
+  gap: 2px;
+}
+
+.big {
+  font-size: 23px;
+}
+
+.mid {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 6px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.hero {
+  min-height: 0;
+  gap: 4px;
+}
+
+.hero .nar {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.hg {
+  grid-template-columns: minmax(0, 1fr) 145px;
+  gap: 7px;
+  min-height: 0;
+}
+
+.cw {
+  min-height: 0;
+}
+
+.side {
+  gap: 4px;
+}
+
+.st b {
+  font-size: 17px;
+}
+
+.sc label {
+  padding: 3px 5px;
+  margin-top: 3px;
+  font-size: 10px;
+}
+
+.fin {
+  gap: 5px;
+  overflow: hidden;
+}
+
+.ft {
+  padding: 6px 8px;
+  gap: 3px;
+}
+
+.ft h2 {
+  font-size: 18px;
+}
+
+.ir {
+  padding: 5px 7px;
+  gap: 6px;
+}
+
+.mini {
+  gap: 3px 8px;
+  margin: 4px 0;
+}
+
+.cols {
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.bg {
+  grid-template-columns: 95px minmax(20px, 1fr) 125px;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.tiles {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 5fr) minmax(0, 4fr);
+  gap: 6px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tiles > .card {
+  min-height: 0;
+  overflow: hidden;
+}
+
+table {
+  font-size: 11px;
+}
+
+td, th {
+  padding: 4px 0;
+}
+
+@media (max-height: 800px) and (min-width: 1101px) {
+  .wrap {
+    padding-top: 4px !important;
+    gap: 4px !important;
+  }
+
+  #dash {
+    gap: 4px !important;
+  }
+
+  .hero .nar {
+    display: none;
+  }
+
+  .card {
+    padding: 6px 8px;
+  }
+
+  .big {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 1100px) {
+  html, body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .wrap {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  #dash {
+    display: flex;
+    overflow: visible;
+  }
+
+  .mid, .tiles {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .hero {
+    min-height: 240px;
+  }
+
+  .hg {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cw {
+    min-height: 150px;
+  }
+}
+
+/* Make the lower dashboard cards more compact */
+.tiles {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  height: 190px !important;
+  max-height: 190px !important;
+  gap: 6px !important;
+  overflow: hidden !important;
+}
+
+.tiles > .card {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 7px 9px !important;
+  overflow: hidden !important;
+}
+
+.tiles h2,
+.tiles h3 {
+  font-size: 15px !important;
+  margin: 0 0 4px !important;
+}
+
+.tiles p {
+  margin: 3px 0 !important;
+  line-height: 1.2 !important;
+}
+
+.tiles table {
+  font-size: 10px !important;
+}
+
+.tiles td,
+.tiles th {
+  padding: 3px 0 !important;
+}
+
+@media (max-width: 1100px) {
+  .tiles {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .tiles > .card {
+    height: auto !important;
+  }
+}
+
+
+/* Further reduce the lower dashboard cards */
+.tiles {
+  height: 145px !important;
+  max-height: 145px !important;
+  flex: 0 0 145px !important;
+  gap: 5px !important;
+}
+
+.tiles > .card {
+  padding: 5px 7px !important;
+}
+
+.tiles h2,
+.tiles h3 {
+  font-size: 13px !important;
+  margin-bottom: 3px !important;
+}
+
+.tiles p {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  margin: 2px 0 !important;
+}
+
+.tiles table {
+  font-size: 9px !important;
+}
+
+.tiles td,
+.tiles th {
+  padding: 2px 0 !important;
+}
+

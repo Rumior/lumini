@@ -25,3 +25,17 @@ dist-ssr
 
 # Temporary dependency lockfile backups
 package-lock.backup-*.json
+
+# Generated TypeScript build information
+*.tsbuildinfo
+
+# Local debug logs
+build-errors.txt
+typescript-errors.txt
+
+# Local backup files and repair folders
+*.bak
+*.backup
+*.before-*
+backup-*/
+repair-backup-*/

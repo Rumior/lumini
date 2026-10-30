@@ -71,3 +71,23 @@ export default defineConfig([
   },
 ])
 ```
+
+
+## Finance OS integration
+
+The **Finances** navigation item now renders the supplied Finance OS dashboard from `public/finance-os/` inside the existing Lumini React workspace. The parent app retains its existing navigation, page routing, and shared application shell; Finance OS styles and interactions remain isolated in the embedded dashboard.
+
+The embedded dashboard currently uses its included demonstration data and prototype module destinations. It is not connected to live banking, accounting, loan, or cloud APIs.
+
+### Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+### Build
+
+```bash
+npm run build
+```

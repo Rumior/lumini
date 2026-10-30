@@ -1,0 +1,295 @@
+
+.lumini-auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background: #f5f7f5;
+  color: #17251e;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.lumini-auth *,
+.lumini-auth *::before,
+.lumini-auth *::after {
+  box-sizing: border-box;
+}
+
+.lumini-auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px;
+  border: 1px solid #e2e8e3;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgb(20 45 30 / 7%);
+}
+
+.lumini-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 38px;
+}
+
+.lumini-auth-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #173f2c;
+  color: #fff;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.lumini-auth-brand div {
+  display: grid;
+  gap: 3px;
+}
+
+.lumini-auth-brand strong {
+  font-size: 20px;
+  letter-spacing: -0.6px;
+}
+
+.lumini-auth-brand div span {
+  color: #738177;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.lumini-auth-intro {
+  margin-bottom: 24px;
+}
+
+.lumini-auth-eyebrow {
+  margin: 0 0 10px;
+  color: #527761;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+
+.lumini-auth-intro h1 {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 5vw, 35px);
+  line-height: 1.15;
+  letter-spacing: -1.3px;
+}
+
+.lumini-auth-intro > p:last-child {
+  margin: 0;
+  color: #738078;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lumini-google-button,
+.lumini-auth-submit {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lumini-google-button {
+  border: 1px solid #dce3dd;
+  background: #fff;
+  color: #26372d;
+}
+
+.lumini-google-button:hover {
+  background: #f8faf8;
+}
+
+.lumini-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: #89948c;
+  font-size: 11px;
+}
+
+.lumini-auth-divider::before,
+.lumini-auth-divider::after {
+  height: 1px;
+  flex: 1;
+  background: #e7ebe7;
+  content: "";
+}
+
+.lumini-auth-form {
+  display: grid;
+  gap: 17px;
+}
+
+.lumini-auth-form > label {
+  display: grid;
+  gap: 8px;
+  color: #34463a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lumini-auth-input {
+  display: flex;
+  min-height: 47px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid #dfe6e0;
+  border-radius: 9px;
+  color: #849187;
+  background: #fff;
+}
+
+.lumini-auth-input:focus-within {
+  border-color: #49775a;
+  box-shadow: 0 0 0 3px rgb(73 119 90 / 10%);
+}
+
+.lumini-auth-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #17251e;
+  font: inherit;
+  font-size: 13px;
+}
+
+.lumini-auth-input input::placeholder {
+  color: #a0aaa2;
+}
+
+.lumini-auth-submit {
+  justify-content: space-between;
+  margin-top: 3px;
+  padding: 0 16px;
+  border: 0;
+  background: #173f2c;
+  color: #fff;
+}
+
+.lumini-auth-submit:hover {
+  background: #22573c;
+}
+
+.lumini-auth-submit:disabled,
+.lumini-google-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.lumini-auth-error,
+.lumini-auth-message {
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.lumini-auth-error {
+  background: #fff0ef;
+  color: #a22d26;
+}
+
+.lumini-auth-message {
+  background: #eef8f0;
+  color: #27633a;
+}
+
+.lumini-auth-switch {
+  margin: 22px 0 0;
+  text-align: center;
+  color: #78847b;
+  font-size: 12px;
+}
+
+.lumini-auth-switch button {
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  color: #24583a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lumini-auth-security {
+  margin: 24px 0 0;
+  color: #98a199;
+  font-size: 10px;
+  text-align: center;
+}
+
+.lumini-auth-loading {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #f5f7f5;
+  color: #52685a;
+  font-size: 13px;
+}
+
+.lumini-auth-spinner {
+  animation: lumini-auth-spin 1s linear infinite;
+}
+
+@keyframes lumini-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lumini-signout {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  padding: 9px 13px;
+  border: 1px solid #dce3dd;
+  border-radius: 9px;
+  background: #fff;
+  color: #26372d;
+  box-shadow: 0 4px 18px rgb(20 45 30 / 10%);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lumini-signout:hover {
+  background: #f3f7f3;
+}
+
+@media (max-width: 480px) {
+  .lumini-auth {
+    padding: 16px;
+  }
+
+  .lumini-auth-card {
+    padding: 25px 20px;
+    border-radius: 15px;
+  }
+
+  .lumini-auth-brand {
+    margin-bottom: 30px;
+  }
+}
