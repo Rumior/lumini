@@ -39,3 +39,22 @@ typescript-errors.txt
 *.before-*
 backup-*/
 repair-backup-*/
+
+# Environment secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Generated TypeScript build information
+*.tsbuildinfo
+
+# Local debug logs
+build-errors.txt
+typescript-errors.txt
+
+# Local backups and repair folders
+*.bak
+*.backup
+*.before-*
+backup-*/
+repair-backup-*/
