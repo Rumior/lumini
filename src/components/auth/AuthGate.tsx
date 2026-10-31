@@ -1,17 +1,22 @@
-﻿
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { LockKeyhole, Mail, ArrowRight, LoaderCircle } from 'lucide-react'
+import Onboarding from '../onboarding/Onboarding'
 import './auth.css'
 
 type Props = {
   children: ReactNode
 }
 
+type WorkspaceState = 'checking' | 'onboarding' | 'ready' | 'error'
+
 export default function AuthGate({ children }: Props) {
   const [session, setSession] = useState<Session | null>(null)
   const [checking, setChecking] = useState(true)
+  const [workspaceState, setWorkspaceState] = useState<WorkspaceState>('checking')
+  const [workspaceError, setWorkspaceError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,6 +33,7 @@ export default function AuthGate({ children }: Props) {
       if (alive) {
         setSession(nextSession)
         setChecking(false)
+        if (!nextSession) setWorkspaceState('checking')
       }
     })
 
@@ -48,6 +54,39 @@ export default function AuthGate({ children }: Props) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!session) return
+
+    let alive = true
+    setWorkspaceState('checking')
+    setWorkspaceError('')
+
+    async function checkWorkspace() {
+      const { data, error: queryError } = await supabase
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', session!.user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (!alive) return
+
+      if (queryError) {
+        setWorkspaceError(
+          'Lumini could not check your workspace. The onboarding database migration may not have been deployed yet. Please try again after setup is complete.'
+        )
+        setWorkspaceState('error')
+        return
+      }
+
+      setWorkspaceState(data ? 'ready' : 'onboarding')
+    }
+
+    void checkWorkspace()
+
+    return () => { alive = false }
+  }, [session, retryCount])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -59,9 +98,7 @@ export default function AuthGate({ children }: Props) {
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
+          options: { emailRedirectTo: window.location.origin },
         })
 
         if (authError) throw authError
@@ -72,31 +109,27 @@ export default function AuthGate({ children }: Props) {
           setMessage('Check your email for a confirmation link to activate your account.')
         }
       } else {
-        const { data, error: authError } =
-          await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-          })
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        })
 
         if (authError) throw authError
         setSession(data.session)
       }
     } catch (err) {
-  const errorMessage =
-    err instanceof Error
-      ? err.message
-      : 'Authentication failed. Please try again.'
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Authentication failed. Please try again.'
 
-  if (errorMessage.toLowerCase().includes('rate limit')) {
-    setError(
-      'Too many account creation or confirmation email requests. Please wait before trying again. If this continues, check your Supabase email rate limits.'
-    )
-  } else {
-    setError(errorMessage)
-  }
-} finally {
-  setBusy(false)
-}
+      if (errorMessage.toLowerCase().includes('rate limit')) {
+        setError('Too many account creation or confirmation email requests. Please wait before trying again. If this continues, check your Supabase email rate limits.')
+      } else {
+        setError(errorMessage)
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function handleGoogleSignIn() {
@@ -107,18 +140,12 @@ export default function AuthGate({ children }: Props) {
     try {
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
+        options: { redirectTo: window.location.origin },
       })
 
       if (authError) throw authError
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Google sign-in could not be started.'
-      )
+      setError(err instanceof Error ? err.message : 'Google sign-in could not be started.')
       setBusy(false)
     }
   }
@@ -126,17 +153,14 @@ export default function AuthGate({ children }: Props) {
   async function handleSignOut() {
     setError('')
     const { error: authError } = await supabase.auth.signOut()
-
-    if (authError) {
-      setError(authError.message)
-    }
+    if (authError) setError(authError.message)
   }
 
   if (checking) {
     return (
       <div className="lumini-auth-loading">
         <LoaderCircle className="lumini-auth-spinner" size={28} />
-        <span>Loading Luminiâ€¦</span>
+        <span>Loading Lumini...</span>
       </div>
     )
   }
@@ -144,7 +168,40 @@ export default function AuthGate({ children }: Props) {
   if (session) {
     return (
       <>
-        {children}
+        {workspaceState === 'checking' && (
+          <div className="lumini-auth-loading">
+            <LoaderCircle className="lumini-auth-spinner" size={28} />
+            <span>Checking your workspace...</span>
+          </div>
+        )}
+
+        {workspaceState === 'error' && (
+          <main className="lumini-auth">
+            <section className="lumini-auth-card">
+              <div className="lumini-auth-brand">
+                <span className="lumini-auth-mark">L</span>
+                <div><strong>Lumini</strong><span>BUSINESS MENTOR</span></div>
+              </div>
+              <div className="lumini-auth-intro">
+                <h1>Workspace setup unavailable.</h1>
+                <p>{workspaceError}</p>
+              </div>
+              <button className="lumini-auth-submit" type="button" onClick={() => setRetryCount((n) => n + 1)}>
+                Retry <ArrowRight size={17} />
+              </button>
+              <button className="lumini-auth-switch" type="button" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </section>
+          </main>
+        )}
+
+        {workspaceState === 'onboarding' && (
+          <Onboarding onComplete={() => setWorkspaceState('ready')} />
+        )}
+
+        {workspaceState === 'ready' && children}
+
         <button
           className="lumini-signout"
           onClick={handleSignOut}
@@ -170,24 +227,11 @@ export default function AuthGate({ children }: Props) {
 
         <div className="lumini-auth-intro">
           <p className="lumini-auth-eyebrow">YOUR BUSINESS, WITH CLARITY</p>
-          <h1>
-            {mode === 'signin'
-              ? 'Welcome back.'
-              : 'Create your account.'}
-          </h1>
-          <p>
-            {mode === 'signin'
-              ? 'Sign in to continue to your business workspace.'
-              : 'Set up your account to get started with Lumini.'}
-          </p>
+          <h1>{mode === 'signin' ? 'Welcome back.' : 'Create your account.'}</h1>
+          <p>{mode === 'signin' ? 'Sign in to continue to your business workspace.' : 'Set up your account to get started with Lumini.'}</p>
         </div>
 
-        <button
-          className="lumini-google-button"
-          type="button"
-          disabled={busy}
-          onClick={handleGoogleSignIn}
-        >
+        <button className="lumini-google-button" type="button" disabled={busy} onClick={handleGoogleSignIn}>
           <svg viewBox="0 0 48 48" width="19" height="19" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" />
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 37.99 46.98 31.8 46.98 24.55Z" />
@@ -197,88 +241,44 @@ export default function AuthGate({ children }: Props) {
           Continue with Google
         </button>
 
-        <div className="lumini-auth-divider">
-          <span>or continue with email</span>
-        </div>
+        <div className="lumini-auth-divider"><span>or continue with email</span></div>
 
         <form className="lumini-auth-form" onSubmit={handleSubmit}>
           <label>
             Email address
             <span className="lumini-auth-input">
               <Mail size={17} />
-              <input
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
+              <input type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </span>
           </label>
-
           <label>
             Password
             <span className="lumini-auth-input">
               <LockKeyhole size={17} />
-              <input
-                type="password"
-                autoComplete={
-                  mode === 'signin' ? 'current-password' : 'new-password'
-                }
-                placeholder="At least 8 characters"
-                minLength={8}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
+              <input type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} placeholder="At least 8 characters" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
             </span>
           </label>
-
-          {error && (
-            <p className="lumini-auth-error" role="alert">{error}</p>
-          )}
-
-          {message && (
-            <p className="lumini-auth-message" role="status">{message}</p>
-          )}
-
-          <button
-            className="lumini-auth-submit"
-            type="submit"
-            disabled={busy}
-          >
-            {busy
-              ? 'Please waitâ€¦'
-              : mode === 'signin'
-                ? 'Sign in'
-                : 'Create account'}
+          {error && <p className="lumini-auth-error" role="alert">{error}</p>}
+          {message && <p className="lumini-auth-message" role="status">{message}</p>}
+          <button className="lumini-auth-submit" type="submit" disabled={busy}>
+            {busy ? 'Please wait...' : mode === 'signin' ? 'Sign in' : 'Create account'}
             {!busy && <ArrowRight size={17} />}
           </button>
         </form>
 
         <p className="lumini-auth-switch">
-          {mode === 'signin'
-            ? "Don't have an account?"
-            : 'Already have an account?'}
-          {' '}
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === 'signin' ? 'signup' : 'signin')
-              setError('')
-              setMessage('')
-            }}
-          >
+          {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
+          <button type="button" onClick={() => {
+            setMode(mode === 'signin' ? 'signup' : 'signin')
+            setError('')
+            setMessage('')
+          }}>
             {mode === 'signin' ? 'Create account' : 'Sign in'}
           </button>
         </p>
 
-        <p className="lumini-auth-security">
-          Your account is protected by Supabase authentication.
-        </p>
+        <p className="lumini-auth-security">Your account is protected by Supabase authentication.</p>
       </section>
     </main>
   )
 }
-

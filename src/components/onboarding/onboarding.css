@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+/* Lumini onboarding. Every rule is scoped to .lumini-onboarding so it cannot leak into the host app. */
+.lumini-onboarding{--rail:#0B1B2B;--bg:#FAF6EE;--paper:#FFFDF8;--line:#E4DAC7;--ink:#0B1B2B;--mut:#6B685E;--gold:#8F6F42;--goldl:#C9A972;--soft:#F1E8D6;--btn:#0B1B2B;--btni:#FAF6EE;--err:#9B3B2E;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){.lumini-onboarding:not([data-theme="light"]){--rail:#07131F;--bg:#0B1B2B;--paper:#102338;--line:#26394E;--ink:#F3ECDD;--mut:#A3AEB9;--gold:#C9A972;--soft:#1B2D41;--btn:#C9A972;--btni:#0B1B2B;--err:#E58E7F;color-scheme:dark}
+}
+.lumini-onboarding[data-theme="dark"]{--rail:#07131F;--bg:#0B1B2B;--paper:#102338;--line:#26394E;--ink:#F3ECDD;--mut:#A3AEB9;--gold:#C9A972;--soft:#1B2D41;--btn:#C9A972;--btni:#0B1B2B;--err:#E58E7F;color-scheme:dark}
+.lumini-onboarding *{box-sizing:border-box}
+.lumini-onboarding{background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.lumini-onboarding .app{min-height:100%;display:flex;flex-direction:column}
+.lumini-onboarding .rail{background:var(--rail);color:#E9E2D2;padding:20px clamp(22px,5vw,64px);display:grid;grid-template-columns:auto 1fr auto;gap:12px clamp(24px,4vw,64px);align-items:center;border-bottom:1px solid #1C2E42}
+.lumini-onboarding .rail .link{color:#9FB0C2}
+.lumini-onboarding .rail .link:hover{color:#FAF6EE}
+.lumini-onboarding .ex{display:flex;gap:16px;align-items:center;font-size:13px;color:#9FB0C2;justify-self:end}
+.lumini-onboarding .mono,.lumini-onboarding .brand small,.lumini-onboarding .eyebrow,.lumini-onboarding .concept b{font:500 10.5px/1.4 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase}
+.lumini-onboarding .brand{display:flex;gap:14px;align-items:center}
+.lumini-onboarding .brand b{font:500 32px/1 "Cormorant Garamond",Georgia,serif;display:block;color:#FAF6EE}
+.lumini-onboarding .brand small{color:#9FB0C2;letter-spacing:.24em;margin-top:6px;display:block}
+.lumini-onboarding .steps{list-style:none;margin:0;padding:0;display:flex;align-items:center}
+.lumini-onboarding .steps li{display:flex;gap:10px;align-items:center;padding:6px 0;position:relative;color:#8FA0B2;font-size:13px;flex:1;white-space:nowrap}
+.lumini-onboarding .steps li:last-child{flex:none}
+.lumini-onboarding .steps em{display:none}
+.lumini-onboarding .steps i{width:22px;height:22px;border:1px solid #3A4E63;border-radius:50%;display:grid;place-items:center;font:500 10px "JetBrains Mono",monospace;font-style:normal;flex:none;background:var(--rail);position:relative;z-index:1}
+.lumini-onboarding .steps li:not(:last-child)::after{content:"";flex:1;height:1px;min-width:14px;margin:0 12px 0 4px;background:#2A3C50}
+.lumini-onboarding .steps li.ok:not(:last-child)::after{background:var(--goldl)}
+.lumini-onboarding .steps li.on{color:#FAF6EE}
+.lumini-onboarding .steps li.on i{border-color:var(--goldl);color:var(--goldl)}
+.lumini-onboarding .steps li.ok i{background:var(--goldl);border-color:var(--goldl);color:#0B1B2B}
+.lumini-onboarding .steps em{margin-left:auto;font:500 9.5px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:#6F8296;font-style:normal}
+.lumini-onboarding .concept{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--mut);max-width:34ch}
+.lumini-onboarding .hero{position:sticky;top:32px}
+.lumini-onboarding .concept b{display:block;color:var(--gold);margin-bottom:8px}
+.lumini-onboarding .priv{margin-top:20px;font-size:12px;color:#6F8296}
+.lumini-onboarding .bar{display:none}
+.lumini-onboarding main{flex:1;display:flex;align-items:center;padding:clamp(32px,6vw,80px) clamp(22px,5vw,64px);min-width:0}
+.lumini-onboarding .top{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:13px;min-height:24px}
+.lumini-onboarding .link{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit;text-decoration:underline;text-underline-offset:3px;padding:2px}
+.lumini-onboarding .link:hover{color:var(--ink)}
+.lumini-onboarding #stage{width:100%;max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(260px,5fr) 7fr;gap:clamp(32px,6vw,96px);align-items:start}
+.lumini-onboarding .pane{min-width:0}
+.lumini-onboarding .eyebrow{color:var(--gold);margin-bottom:14px}
+.lumini-onboarding h1{font:500 clamp(34px,4.6vw,50px)/1.08 "Cormorant Garamond",Georgia,serif;margin:0 0 14px;letter-spacing:-.01em;outline:0}
+.lumini-onboarding .lede{color:var(--mut);max-width:54ch;margin:0 0 32px}
+.lumini-onboarding .card{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:22px}
+.lumini-onboarding .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:var(--mut)}
+.lumini-onboarding .f{margin-bottom:18px}
+.lumini-onboarding .card.f{margin-bottom:16px}
+.lumini-onboarding label{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
+.lumini-onboarding .opt{color:var(--mut);font-weight:400}
+.lumini-onboarding input,.lumini-onboarding select,.lumini-onboarding textarea{width:100%;height:46px;padding:0 14px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:3px;font:inherit}
+.lumini-onboarding .card input,.lumini-onboarding .card select{background:var(--bg)}
+.lumini-onboarding textarea{height:88px;padding:12px 14px;resize:vertical}
+.lumini-onboarding :is(input,select,textarea,button):focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lumini-onboarding [aria-invalid=true]{border-color:var(--err)}
+.lumini-onboarding .err{color:var(--err);font-size:13px;margin:6px 0 0}
+.lumini-onboarding .err::before{content:"⚠ "}
+.lumini-onboarding .help{color:var(--mut);font-size:13px;margin:6px 0 0}
+.lumini-onboarding .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lumini-onboarding .choice{display:flex;gap:16px;align-items:flex-start;text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:20px 22px;margin-bottom:14px;transition:border-color .2s,box-shadow .2s}
+.lumini-onboarding .choice:hover{border-color:var(--gold)}
+.lumini-onboarding .choice[aria-pressed=true]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.lumini-onboarding .choice[disabled]{opacity:.55;cursor:not-allowed}
+.lumini-onboarding .choice b{display:block;font:500 22px/1.2 "Cormorant Garamond",Georgia,serif}
+.lumini-onboarding .choice span{color:var(--mut);font-size:14px}
+.lumini-onboarding .choice .tick{margin-left:auto;color:var(--gold);font-size:16px;visibility:hidden}
+.lumini-onboarding .choice[aria-pressed=true] .tick{visibility:visible}
+.lumini-onboarding .ico{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--gold);flex:none;font:500 15px "Cormorant Garamond",serif}
+.lumini-onboarding .chips{display:flex;flex-wrap:wrap;gap:10px}
+.lumini-onboarding .chip{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:999px;height:42px;padding:0 20px;cursor:pointer}
+.lumini-onboarding .chip[aria-pressed=true]{background:var(--btn);color:var(--btni);border-color:var(--btn)}
+.lumini-onboarding .chip[aria-pressed=true]::before{content:"✓ "}
+.lumini-onboarding .check{display:flex;gap:12px;align-items:center;font-weight:400;padding:12px 14px;border:1px solid var(--line);border-radius:3px;margin-bottom:8px;background:var(--bg);cursor:pointer}
+.lumini-onboarding .check input{width:18px;height:18px;accent-color:var(--gold);margin:0}
+.lumini-onboarding .add{width:100%;height:50px;border:1px dashed var(--gold);background:none;color:var(--gold);border-radius:4px;font:500 14px Inter;cursor:pointer}
+.lumini-onboarding .add:hover{background:var(--soft)}
+.lumini-onboarding .inv{display:grid;grid-template-columns:1fr 210px auto;gap:12px;align-items:start;margin-bottom:12px}
+.lumini-onboarding .sum{border-top:1px solid var(--line)}
+.lumini-onboarding .sum>div{display:grid;grid-template-columns:130px 1fr auto;gap:16px;padding:18px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.lumini-onboarding .sum b{font-weight:500}
+.lumini-onboarding .sum span{color:var(--mut);font-size:14px}
+.lumini-onboarding .actions{display:flex;gap:12px;align-items:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--line)}
+.lumini-onboarding .sp{flex:1}
+.lumini-onboarding .btn{height:46px;padding:0 26px;border-radius:3px;border:1px solid var(--btn);background:var(--btn);color:var(--btni);font:500 14px Inter;letter-spacing:.02em;cursor:pointer}
+.lumini-onboarding .btn.ghost{background:none;color:var(--ink);border-color:var(--line)}
+.lumini-onboarding .btn.ghost:hover{border-color:var(--ink)}
+.lumini-onboarding .btn:disabled{opacity:.65;cursor:wait}
+.lumini-onboarding .done li{list-style:none;display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lumini-onboarding .done ul{padding:0;margin:0 0 28px;border-top:1px solid var(--line)}
+.lumini-onboarding .done li::before{content:"✓";color:var(--gold);font-weight:600}
+.lumini-onboarding .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(prefers-reduced-motion:no-preference){.lumini-onboarding #stage>*{animation:in .45s both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+}
+@media(max-width:860px){.lumini-onboarding .rail{grid-template-columns:1fr auto;padding:18px 22px}
+.lumini-onboarding .steps{display:none}
+.lumini-onboarding .bar{display:block;grid-column:1/3;margin-top:4px;font:500 10.5px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:#9FB0C2}
+.lumini-onboarding .bar div{height:2px;background:#22344A;margin-top:8px}
+.lumini-onboarding .bar i{display:block;height:100%;background:var(--goldl);transition:width .3s}
+.lumini-onboarding #stage{grid-template-columns:1fr;gap:28px}
+.lumini-onboarding .hero{position:static}
+.lumini-onboarding .concept{margin-top:20px}
+.lumini-onboarding .grid,.lumini-onboarding .inv{grid-template-columns:1fr}
+.lumini-onboarding .sum>div{grid-template-columns:1fr auto}
+.lumini-onboarding .sum>div span{grid-column:1/3}
+}
+@media(max-width:1280px){.lumini-onboarding .steps li:not(.on) .lb{display:none}
+}
+.lumini-onboarding .av{width:34px;height:34px;border-radius:50%;background:var(--soft);color:var(--gold);display:grid;place-items:center;font:600 18px "Cormorant Garamond",serif;flex:none}
+.lumini-onboarding .hd{display:flex;align-items:center;gap:12px}
+.lumini-onboarding .more-btn{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;text-align:left;padding:16px 18px;margin-top:6px;background:var(--soft);border:1px solid var(--gold);border-radius:4px;color:var(--ink);font:inherit;cursor:pointer;transition:background .2s}
+.lumini-onboarding .more-btn:hover{background:var(--line)}
+.lumini-onboarding .more-btn[aria-expanded=true]{border-radius:4px 4px 0 0}
+.lumini-onboarding .mb-t b{display:block;font:500 20px/1.2 "Cormorant Garamond",Georgia,serif}
+.lumini-onboarding .mb-t small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}
+.lumini-onboarding .mb-r{display:flex;align-items:center;gap:12px;flex:none}
+.lumini-onboarding .mb-r em{font:500 10px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:var(--gold)}
+.lumini-onboarding .mb-r i{width:28px;height:28px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-style:normal;font-size:18px;line-height:1}
+.lumini-onboarding .more{padding:20px 18px 2px;margin-top:-1px;border:1px solid var(--gold);border-top:0;border-radius:0 0 4px 4px}
+.lumini-onboarding .sec{font:500 10.5px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:30px 0 12px}
+.lumini-onboarding .sec:first-child{margin-top:0}
+.lumini-onboarding .logo{display:flex;align-items:center;gap:16px}
+.lumini-onboarding .lg{width:64px;height:64px;border:1px solid var(--line);border-radius:4px;background:var(--paper);display:grid;place-items:center;overflow:hidden;font:500 28px "Cormorant Garamond",serif;color:var(--gold)}
+.lumini-onboarding .lg img{width:100%;height:100%;object-fit:contain}
+.lumini-onboarding .up{display:inline-flex;align-items:center;margin:0;cursor:pointer}
+.lumini-onboarding .up:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.lumini-onboarding .tree{margin-top:28px;padding:18px 20px;background:var(--paper);border:1px solid var(--line);border-radius:4px;font-size:13px;width:100%;max-width:none;box-sizing:border-box}
+.lumini-onboarding .tree .mono{display:block;color:var(--gold);margin-bottom:10px}
+.lumini-onboarding .tree b{display:block;font:500 21px "Cormorant Garamond",Georgia,serif}
+.lumini-onboarding .tree div{margin:6px 0 0 8px;padding-left:14px;border-left:1px solid var(--line)}
+.lumini-onboarding .tree small{color:var(--mut);margin-left:8px}
+.lumini-onboarding .tree .pj{color:var(--gold)}
+
+.lumini-onboarding,.lumini-onboarding .app{min-height:100vh}

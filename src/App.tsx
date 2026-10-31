@@ -1,3 +1,9 @@
+import "katex/dist/katex.min.css";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { supabase } from './lib/supabase'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
@@ -33,7 +39,7 @@ const initialActions: Action[] = [
   { id: 4, title: 'Document the weekly stock-count routine', area: 'Operations', due: '02 Nov', done: true, impact: 'Completed' },
 ]
 const initialMessages: Message[] = [
-  { id: 1, from: 'lumini', text: 'Good morning, Amara. Iâ€™ve reviewed your latest figures. Your gross margin is healthy at 35%, but cash timing deserves attention before you pursue more sales.', detail: 'Based on your September figures Â· User reported, not audited' },
+  { id: 1, from: 'lumini', text: "Good morning, Amara. I've reviewed your latest figures. Your gross margin is healthy at 35%, but cash timing deserves attention before you pursue more sales.", detail: 'Based on your September figures | User reported, not audited' },
 ]
 const seedFinance: Finance = { revenue: 300000, direct: 195000, expenses: 75000, price: 2500, variable: 1625, fixed: 75000 }
 
@@ -130,8 +136,8 @@ function App() {
         }
       ],
       calculations: [
-        `Gross profit = ${money(finance.revenue)} − ${money(finance.direct)} = ${money(gross)}.`,
-        `Gross margin = gross profit ÷ revenue × 100 = ${margin.toFixed(1)}%.`
+        `Gross profit = ${money(finance.revenue)} - ${money(finance.direct)} = ${money(gross)}.`,
+        `Gross margin = gross profit / revenue x 100 = ${margin.toFixed(1)}%.`
       ],
       recommendation: {
         action: 'Run one controlled pricing or retention experiment before making a wider change.',
@@ -176,7 +182,7 @@ function App() {
         }
       ],
       calculations: [
-        `Operating result = gross profit − operating expenses = ${money(gross)} − ${money(finance.expenses)} = ${money(operating)}.`,
+        `Operating result = gross profit - operating expenses = ${money(gross)} - ${money(finance.expenses)} = ${money(operating)}.`,
         'A cash forecast cannot be calculated reliably without opening cash, dated receipts and dated payments.'
       ],
       recommendation: {
@@ -226,7 +232,6 @@ function App() {
       }
     }
   ]
-  const contribution = finance.price - finance.variable
   const cashData = useMemo(() => {
     const base = Math.max(operating, 0)
     return [
@@ -237,20 +242,78 @@ function App() {
     ]
   }, [operating])
 
-  const sendMessage = (preset?: string) => {
-    const text = (preset || chatInput).trim()
+  const sendMessage = async (preset?: string) => {
+    const text = (preset ?? chatInput).trim()
+
     if (!text || chatLoading) return
-    setMessages(m => [...m, { id: Date.now(), from: 'user', text }])
-    setChatInput(''); setChatLoading(true)
-    setTimeout(() => {
-      const lower = text.toLowerCase()
-      let response = 'Before recommending a direction, Iâ€™d separate what is measured from what is assumed. Your current figures show a positive operating result, so the next useful step is to test the constraint with the least irreversible commitment.'
-      let detail = 'Recommendation Â· Moderate confidence Â· Based on saved business context'
-      if (lower.includes('cash')) { response = 'Your business is profitable on the figures provided, so cash pressure is more likely a timing issue than a demand issue. Start by mapping when customers pay against when suppliers, payroll, and debt fall due. Growth can make this tighter if each sale consumes cash before collection.'; detail = 'Diagnosis Â· Cash movement is not the same as profit Â· 3 inputs still needed' }
-      if (lower.includes('price') || lower.includes('margin')) { response = `At ${money(finance.price)} per unit and ${money(finance.variable)} variable cost, each sale contributes ${money(contribution)}. A price test should protect that contribution while measuring conversion. I would test a modest increase with one customer segment before changing every price.`; detail = 'Calculated from your editable unit economics Â· No market price claims made' }
-      if (lower.includes('next') || lower.includes('priority')) { response = 'Speak with five recent customers before increasing acquisition spend. It is low-cost, reversible, and will tell you whether delivery, product selection, or follow-up is limiting repeat purchases. Measure repeat-purchase intent and the reasons behind it.'; detail = 'Ranked for impact, effort, cost and reversibility Â· Review in 7 days' }
-      setMessages(m => [...m, { id: Date.now() + 1, from: 'lumini', text: response, detail }]); setChatLoading(false)
-    }, 850)
+
+    const previousMessages = messages.slice(-10)
+
+    setMessages(current => [
+      ...current,
+      { id: Date.now(), from: 'user', text }
+    ])
+
+    setChatInput('')
+    setChatLoading(true)
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'lumini-mentor',
+        {
+          body: {
+            message: text,
+            history: previousMessages.map(item => ({
+              role: item.from === 'user' ? 'user' : 'assistant',
+              text: item.text,
+            })),
+            context: {
+              business,
+              financials: {
+                ...finance,
+                grossProfit: finance.revenue - finance.direct,
+                grossMarginPercent: finance.revenue
+                  ? ((finance.revenue - finance.direct) / finance.revenue) * 100
+                  : null,
+                operatingResult:
+                  finance.revenue - finance.direct - finance.expenses,
+                contributionPerUnit: finance.price - finance.variable,
+              },
+            },
+          },
+        }
+      )
+
+      if (error) throw error
+
+      if (!data || typeof data.answer !== 'string' || !data.answer.trim()) {
+        throw new Error('The AI service returned an empty answer.')
+      }
+
+      setMessages(current => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          from: 'lumini',
+          text: data.answer,
+          detail: 'AI-generated advice based on the context provided',
+        },
+      ])
+    } catch (error) {
+      console.error('Lumini mentor request failed:', error)
+
+      setMessages(current => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          from: 'lumini',
+          text: 'I could not connect to the AI mentor just now. Please check your connection and try again.',
+          detail: 'The request failed; no new advice was generated.',
+        },
+      ])
+    } finally {
+      setChatLoading(false)
+    }
   }
   const toggleAction = (id: number) => setActions(a => a.map(x => {
     if (x.id !== id) return x
@@ -289,15 +352,15 @@ function App() {
       <header className="topbar">
         <div className="topbar-left"><button className="icon-btn menu-trigger" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={21} /></button><span className="crumb">AMANI WORKSPACE</span><ChevronRight size={13} /><strong>{viewTitle[view]}</strong></div>
         <div className="topbar-actions">
-          <button className="search-trigger" onClick={() => setSearchOpen(true)}><Search size={17} /><span>Search workspace</span><kbd>âŒ˜ K</kbd></button>
+          <button className="search-trigger" onClick={() => setSearchOpen(true)}><Search size={17} /><span>Search workspace</span><kbd>Ctrl K</kbd></button>
           <button className="icon-btn notice-btn" onClick={() => setNoticesOpen(!noticesOpen)} aria-label="Notifications"><Bell size={19} /><i /></button>
-          <div className="profile-wrap"><button className="avatar" onClick={() => setProfileOpen(!profileOpen)} aria-label="Open profile menu">AO</button>{profileOpen && <div className="profile-menu"><strong>Amara Otieno</strong><span>Owner Â· Amani Home & Living</span><button onClick={() => { go('settings'); setProfileOpen(false) }}><UserRound size={15} />Account settings</button><button onClick={() => { exportCSV(); setProfileOpen(false) }}><Download size={15} />Export my data</button></div>}</div>
+          <div className="profile-wrap"><button className="avatar" onClick={() => setProfileOpen(!profileOpen)} aria-label="Open profile menu">AO</button>{profileOpen && <div className="profile-menu"><strong>Amara Otieno</strong><span>Owner | Amani Home & Living</span><button onClick={() => { go('settings'); setProfileOpen(false) }}><UserRound size={15} />Account settings</button><button onClick={() => { exportCSV(); setProfileOpen(false) }}><Download size={15} />Export my data</button></div>}</div>
         </div>
       </header>
 
       <div className="page-content">
         {view === 'home' && <section className="view home-view">
-          <div className="welcome-row"><div><p className="date-line">MONDAY, 26 OCTOBER</p><h1>Good morning, Amara.</h1><p>Your business is profitable. Today, letâ€™s make its cash work harder.</p></div><button className="primary-btn" onClick={() => go('mentor')}><Sparkles size={17} />Ask Lumini</button></div>
+          <div className="welcome-row"><div><p className="date-line">MONDAY, 26 OCTOBER</p><h1>Good morning, Amara.</h1><p>Your business is profitable. Today, let's make its cash work harder.</p></div><button className="primary-btn" onClick={() => go('mentor')}><Sparkles size={17} />Ask Lumini</button></div>
           <div className="overview-grid">
             <article className="priority-panel">
               <div className="panel-kicker"><span>YOUR NEXT BEST MOVE</span><EvidenceTag>High confidence</EvidenceTag></div>
@@ -312,12 +375,12 @@ function App() {
           </div>
           <div className="metric-strip">
             <button onClick={() => go('finances')}><span>MONTHLY REVENUE <ArrowUpRight size={14} /></span><strong>{money(finance.revenue)}</strong><small><ArrowUpRight size={13} />8.4% from August</small></button>
-            <button onClick={() => go('finances')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= 32 && margin <= 38 ? 'Within your 32â€“38% target' : 'Outside your 32â€“38% target'}</small></button>
+            <button onClick={() => go('finances')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= 32 && margin <= 38 ? 'Within your 32-38% target' : 'Outside your 32-38% target'}</small></button>
             <button onClick={() => go('finances')}><span>OPERATING RESULT <ArrowUpRight size={14} /></span><strong>{money(operating)}</strong><small>Before tax & unreported items</small></button>
             <button onClick={() => go('plans')}><span>ACTIONS COMPLETE <ArrowUpRight size={14} /></span><strong>{completed}<i> / {actions.length}</i></strong><small>{actions.length - completed} priorities still open</small></button>
           </div>
           <div className="lower-grid">
-            <article className="actions-panel"><div className="section-head"><div><p className="eyebrow">THIS WEEK</p><h3>Priorities that matter</h3></div><button className="text-btn" onClick={() => go('plans')}>View all <ArrowRight size={15} /></button></div><div className="action-list">{actions.slice(0, 3).map(a => <div className={`action-row ${a.done ? 'is-done' : ''}`} key={a.id}><button className="check-btn" onClick={() => toggleAction(a.id)} aria-label={a.done ? `Reopen ${a.title}` : `Complete ${a.title}`}>{a.done ? <Check size={15} /> : <Circle size={17} />}</button><div><strong>{a.title}</strong><span>{a.area} Â· {a.impact}</span></div><time>{a.due}</time></div>)}</div></article>
+            <article className="actions-panel"><div className="section-head"><div><p className="eyebrow">THIS WEEK</p><h3>Priorities that matter</h3></div><button className="text-btn" onClick={() => go('plans')}>View all <ArrowRight size={15} /></button></div><div className="action-list">{actions.slice(0, 3).map(a => <div className={`action-row ${a.done ? 'is-done' : ''}`} key={a.id}><button className="check-btn" onClick={() => toggleAction(a.id)} aria-label={a.done ? `Reopen ${a.title}` : `Complete ${a.title}`}>{a.done ? <Check size={15} /> : <Circle size={17} />}</button><div><strong>{a.title}</strong><span>{a.area} | {a.impact}</span></div><time>{a.due}</time></div>)}</div></article>
             <article className="cash-panel"><div className="section-head"><div><p className="eyebrow">LOOKING AHEAD</p><h3>Operating result</h3></div><span className="tiny-label">6 MONTH VIEW</span></div><div className="mini-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={cashData.slice(0, 6)}><defs><linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#af915f" stopOpacity={.35}/><stop offset="100%" stopColor="#af915f" stopOpacity={0}/></linearGradient></defs><Area type="monotone" dataKey="actual" stroke="#af915f" strokeWidth={2.2} fill="url(#goldFill)" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#807e77', fontSize: 11 }} /><YAxis hide domain={[0, 'auto']} /></AreaChart></ResponsiveContainer></div><div className="chart-caption"><TrendingUp size={15} /><span>Positive trajectory, based on reported results</span></div></article>
           </div>
           <div className="disclosure"><ShieldCheck size={15} /><span>Calculations use your reported figures, not audited statements. Last updated 25 October 2026.</span><button onClick={() => go('business')}>Review business data</button></div>
@@ -328,9 +391,20 @@ function App() {
           <div className="mentor-layout">
             <div className="conversation">
               <div className="conversation-context"><Database size={15} /><span>Using September financials, business profile & active goals</span><button onClick={() => go('business')}>Inspect context</button></div>
-              <div className="messages">{messages.map(m => <div className={`message ${m.from}`} key={m.id}>{m.from === 'lumini' && <span className="mentor-seal"><Sparkles size={16} /></span>}<div><p>{m.text}</p>{m.detail && <small><BookOpen size={13} />{m.detail}</small>}{m.from === 'lumini' && m.id !== 1 && <button className="message-action" onClick={() => { setActionTitle(m.text.split('.')[0]); setNewActionOpen(true) }}><Plus size={14} />Turn into an action</button>}</div></div>)}{chatLoading && <div className="message lumini"><span className="mentor-seal"><Sparkles size={16} /></span><div className="thinking"><i /><i /><i /><span>Reviewing your business context</span></div></div>}<div ref={chatEnd} /></div>
+              <div className="messages">{messages.map(m => <div className={`message ${m.from}`} key={m.id}>{m.from === 'lumini' && <span className="mentor-seal"><Sparkles size={16} /></span>}<div><div className="markdown-body">
+  {m.from === 'lumini' ? (
+    <ReactMarkdown
+  remarkPlugins={[remarkGfm, remarkMath]}
+  rehypePlugins={[rehypeKatex]}
+>
+      {m.text}
+    </ReactMarkdown>
+  ) : (
+    <p>{m.text}</p>
+  )}
+</div>{m.detail && <small><BookOpen size={13} />{m.detail}</small>}{m.from === 'lumini' && m.id !== 1 && <button className="message-action" onClick={() => { setActionTitle(m.text.split('.')[0]); setNewActionOpen(true) }}><Plus size={14} />Turn into an action</button>}</div></div>)}{chatLoading && <div className="message lumini"><span className="mentor-seal"><Sparkles size={16} /></span><div className="thinking"><i /><i /><i /><span>Reviewing your business context</span></div></div>}<div ref={chatEnd} /></div>
               <div className="prompt-chips">{['What should I do next?', 'Why is cash tight?', 'Should I change my pricing?'].map(p => <button key={p} onClick={() => sendMessage(p)}>{p}</button>)}</div>
-              <form className="chat-form" onSubmit={e => { e.preventDefault(); sendMessage() }}><textarea value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder="Ask about a decision, challenge, or opportunityâ€¦" aria-label="Message Lumini" rows={2} /><div><span>Enter to send Â· Shift + Enter for a new line</span><button className="send-btn" type="submit" disabled={!chatInput.trim() || chatLoading} aria-label="Send message"><Send size={18} /></button></div></form>
+              <form className="chat-form" onSubmit={e => { e.preventDefault(); sendMessage() }}><textarea value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder="Ask about a decision, challenge, or opportunity..." aria-label="Message Lumini" rows={2} /><div><span>Enter to send | Shift + Enter for a new line</span><button className="send-btn" type="submit" disabled={!chatInput.trim() || chatLoading} aria-label="Send message"><Send size={18} /></button></div></form>
               <p className="ai-note">Lumini can make mistakes. Review assumptions before consequential decisions.</p>
             </div>
             <aside className="mentor-aside"><p className="eyebrow">A BETTER CONVERSATION</p><h3>Start with what matters.</h3>{[{ icon: TrendingUp, t: 'Diagnose a challenge', d: 'Find the constraint beneath the symptom.', q: 'Sales have slowed. Help me find the real cause.' }, { icon: SlidersHorizontal, t: 'Compare a decision', d: 'Weigh options, trade-offs and downside.', q: 'Help me compare hiring a salesperson with outsourcing.' }, { icon: Calculator, t: 'Understand the numbers', d: 'Calculate without hiding the assumptions.', q: 'Explain my break-even point and margin.' }].map(x => <button className="topic-link" key={x.t} onClick={() => sendMessage(x.q)}><x.icon size={19} /><span><strong>{x.t}</strong><small>{x.d}</small></span><ArrowRight size={15} /></button>)}<div className="mentor-principle"><ShieldCheck size={20} /><p><strong>Context before advice.</strong><br />Lumini asks when a missing fact could change the answer.</p></div></aside>
@@ -349,7 +423,7 @@ function App() {
 
         {view === 'business' && <section className="view business-view"><div className="page-heading"><div><p className="date-line">BUSINESS MEMORY</p><h1>What Lumini understands.</h1><p>Inspect and correct the context behind every recommendation.</p></div><EvidenceTag>92% complete</EvidenceTag></div><div className="profile-progress"><span style={{ width: '92%' }} /></div><div className="business-layout"><form className="business-form" onSubmit={e => { e.preventDefault(); setToast('Business profile saved') }}><div className="form-section"><div className="form-section-title"><Building2 size={19} /><div><h3>Business essentials</h3><p>The basic context used across your workspace.</p></div></div><div className="field-grid">{[{ k: 'name', l: 'Business name' }, { k: 'industry', l: 'Industry' }, { k: 'stage', l: 'Business stage' }, { k: 'location', l: 'Location / service area' }, { k: 'model', l: 'Business model' }, { k: 'customers', l: 'Primary customers' }].map(x => <label key={x.k}><span>{x.l}</span><input value={business[x.k as keyof typeof business]} onChange={e => setBusiness(b => ({ ...b, [x.k]: e.target.value }))} required /></label>)}</div></div><div className="form-section"><div className="form-section-title"><Target size={19} /><div><h3>Current direction</h3><p>Your active goal guides how recommendations are ranked.</p></div></div><label className="full-field"><span>Primary business goal</span><textarea rows={4} value={business.goal} onChange={e => setBusiness(b => ({ ...b, goal: e.target.value }))} /></label></div><div className="form-actions"><span><LockKeyhole size={14} />Only you can access this workspace</span><button className="primary-btn" type="submit">Save changes <Check size={16} /></button></div></form><aside className="context-aside"><p className="eyebrow">CONTEXT QUALITY</p><h3>A clear foundation</h3><p>Lumini has enough context for financial diagnosis and weekly planning.</p><ul><li><Check size={15} />Business model confirmed</li><li><Check size={15} />Customer segment described</li><li><Check size={15} />September figures available</li><li className="missing"><Plus size={15} />Add average collection period</li></ul><button onClick={() => go('finances')}>Review financial inputs <ArrowRight size={15} /></button><div className="fact-legend"><strong>How facts are labelled</strong><span><i className="reported" />User reported</span><span><i className="calculated" />Calculated</span><span><i className="assumed" />Assumption</span></div></aside></div></section>}
 
-        {view === 'plans' && <section className="view plans-view"><div className="page-heading"><div><p className="date-line">ACCOUNTABILITY</p><h1>Turn thinking into traction.</h1><p>A small, deliberate plan with owners, dates and measurable outcomes.</p></div><button className="primary-btn" onClick={() => setNewActionOpen(true)}><Plus size={17} />New action</button></div><div className="plan-summary"><div><span>ACTIVE PLAN</span><h2>Strengthen cash & customer retention</h2><p>30-day focus Â· Review on 23 November</p></div><div className="completion-stat"><strong>{actions.length ? Math.round(completed / actions.length * 100) : 0}%</strong><span>{completed} of {actions.length} complete</span><i><em style={{ width: `${actions.length ? completed / actions.length * 100 : 0}%` }} /></i></div></div><div className="plan-toolbar"><div>{['Active', 'Completed', 'All'].map(f => <button className={planFilter === f ? 'active' : ''} key={f} onClick={() => setPlanFilter(f)}>{f}<span>{f === 'Active' ? actions.filter(a => !a.done).length : f === 'Completed' ? completed : actions.length}</span></button>)}</div><button className="secondary-btn" onClick={() => go('mentor')}><Sparkles size={15} />Ask for a recommendation</button></div><div className="plan-table"><div className="plan-table-head"><span>ACTION</span><span>AREA</span><span>DUE</span><span>EXPECTED VALUE</span><span /></div>{actions.filter(a => planFilter === 'All' || (planFilter === 'Active' ? !a.done : a.done)).map(a => <div className={`plan-row ${a.done ? 'is-done' : ''}`} key={a.id}><div><button className="check-btn" onClick={() => toggleAction(a.id)} aria-label={a.done ? 'Reopen action' : 'Complete action'}>{a.done ? <Check size={15} /> : <Circle size={17} />}</button><strong>{a.title}</strong></div><span>{a.area}</span><time>{a.due}</time><span>{a.impact}</span><button className="icon-btn delete-action" onClick={() => { setActions(x => x.filter(y => y.id !== a.id)); setToast('Action removed') }} aria-label={`Delete ${a.title}`}><Trash2 size={16} /></button></div>)}{actions.filter(a => planFilter === 'All' || (planFilter === 'Active' ? !a.done : a.done)).length === 0 && <div className="empty-state"><CheckCircle2 size={28} /><h3>Nothing here right now</h3><p>Switch views or add a new action to keep momentum.</p></div>}</div></section>}
+        {view === 'plans' && <section className="view plans-view"><div className="page-heading"><div><p className="date-line">ACCOUNTABILITY</p><h1>Turn thinking into traction.</h1><p>A small, deliberate plan with owners, dates and measurable outcomes.</p></div><button className="primary-btn" onClick={() => setNewActionOpen(true)}><Plus size={17} />New action</button></div><div className="plan-summary"><div><span>ACTIVE PLAN</span><h2>Strengthen cash & customer retention</h2><p>30-day focus | Review on 23 November</p></div><div className="completion-stat"><strong>{actions.length ? Math.round(completed / actions.length * 100) : 0}%</strong><span>{completed} of {actions.length} complete</span><i><em style={{ width: `${actions.length ? completed / actions.length * 100 : 0}%` }} /></i></div></div><div className="plan-toolbar"><div>{['Active', 'Completed', 'All'].map(f => <button className={planFilter === f ? 'active' : ''} key={f} onClick={() => setPlanFilter(f)}>{f}<span>{f === 'Active' ? actions.filter(a => !a.done).length : f === 'Completed' ? completed : actions.length}</span></button>)}</div><button className="secondary-btn" onClick={() => go('mentor')}><Sparkles size={15} />Ask for a recommendation</button></div><div className="plan-table"><div className="plan-table-head"><span>ACTION</span><span>AREA</span><span>DUE</span><span>EXPECTED VALUE</span><span /></div>{actions.filter(a => planFilter === 'All' || (planFilter === 'Active' ? !a.done : a.done)).map(a => <div className={`plan-row ${a.done ? 'is-done' : ''}`} key={a.id}><div><button className="check-btn" onClick={() => toggleAction(a.id)} aria-label={a.done ? 'Reopen action' : 'Complete action'}>{a.done ? <Check size={15} /> : <Circle size={17} />}</button><strong>{a.title}</strong></div><span>{a.area}</span><time>{a.due}</time><span>{a.impact}</span><button className="icon-btn delete-action" onClick={() => { setActions(x => x.filter(y => y.id !== a.id)); setToast('Action removed') }} aria-label={`Delete ${a.title}`}><Trash2 size={16} /></button></div>)}{actions.filter(a => planFilter === 'All' || (planFilter === 'Active' ? !a.done : a.done)).length === 0 && <div className="empty-state"><CheckCircle2 size={28} /><h3>Nothing here right now</h3><p>Switch views or add a new action to keep momentum.</p></div>}</div></section>}
 
         {view === 'insights' && <InsightsPage
           businessName={business.name}
@@ -443,14 +517,16 @@ function App() {
       </div>
     </main>
 
-    {searchOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}><div className="search-modal" role="dialog" aria-modal="true" aria-label="Search workspace"><div className="search-input"><Search size={20} /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools, reports and actionsâ€¦" /><button onClick={() => setSearchOpen(false)}><X size={18} /></button></div><div className="search-results"><p>{search ? `${searchResults.length} RESULTS` : 'QUICK LINKS'}</p>{searchResults.map(x => <button key={x.title} onClick={() => go(x.view)}><span><strong>{x.title}</strong><small>{x.sub}</small></span><ArrowRight size={16} /></button>)}{!searchResults.length && <div className="no-results">No matching items. Try â€œfinanceâ€ or â€œcashâ€.</div>}</div><footer><span><kbd>â†µ</kbd> to open</span><span><kbd>esc</kbd> to close</span></footer></div></div>}
-    {noticesOpen && <><button className="notice-backdrop" onClick={() => setNoticesOpen(false)} aria-label="Close notifications" /><aside className="notice-panel"><div className="section-head"><h3>Notifications</h3><button className="icon-btn" onClick={() => setNoticesOpen(false)}><X size={18} /></button></div><div className="notice-item unread"><span><Clock3 size={17} /></span><div><strong>Your monthly review is Friday</strong><p>September figures are ready for your review.</p><small>2 hours ago</small></div></div><div className="notice-item"><span><Target size={17} /></span><div><strong>One action is due today</strong><p>Customer calls are still open in this weekâ€™s plan.</p><small>Today</small></div></div><button className="text-btn" onClick={() => { go('plans'); setNoticesOpen(false) }}>Open my plan <ArrowRight size={15} /></button></aside></>}
+    {searchOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}><div className="search-modal" role="dialog" aria-modal="true" aria-label="Search workspace"><div className="search-input"><Search size={20} /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools, reports and actionsÃ¢â‚¬Â¦" /><button onClick={() => setSearchOpen(false)}><X size={18} /></button></div><div className="search-results"><p>{search ? `${searchResults.length} RESULTS` : 'QUICK LINKS'}</p>{searchResults.map(x => <button key={x.title} onClick={() => go(x.view)}><span><strong>{x.title}</strong><small>{x.sub}</small></span><ArrowRight size={16} /></button>)}{!searchResults.length && <div className="no-results">No matching items. Try "finance" or "cash".</div>}</div><footer><span><kbd>Enter</kbd> to open</span><span><kbd>esc</kbd> to close</span></footer></div></div>}
+    {noticesOpen && <><button className="notice-backdrop" onClick={() => setNoticesOpen(false)} aria-label="Close notifications" /><aside className="notice-panel"><div className="section-head"><h3>Notifications</h3><button className="icon-btn" onClick={() => setNoticesOpen(false)}><X size={18} /></button></div><div className="notice-item unread"><span><Clock3 size={17} /></span><div><strong>Your monthly review is Friday</strong><p>September figures are ready for your review.</p><small>2 hours ago</small></div></div><div className="notice-item"><span><Target size={17} /></span><div><strong>One action is due today</strong><p>Customer calls are still open in this weekÃ¢â‚¬â„¢s plan.</p><small>Today</small></div></div><button className="text-btn" onClick={() => { go('plans'); setNoticesOpen(false) }}>Open my plan <ArrowRight size={15} /></button></aside></>}
     {newActionOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setNewActionOpen(false) }}><div className="action-modal" role="dialog" aria-modal="true" aria-labelledby="new-action-title"><button className="modal-close icon-btn" onClick={() => setNewActionOpen(false)} aria-label="Close"><X size={19} /></button><p className="eyebrow">ADD TO YOUR PLAN</p><h2 id="new-action-title">Make the next step concrete.</h2><p>Recommendations only become actions with your approval.</p><form onSubmit={e => { e.preventDefault(); addAction() }}><label><span>Action title</span><textarea autoFocus rows={3} value={actionTitle} onChange={e => setActionTitle(e.target.value)} placeholder="What will you do?" required /></label><div className="modal-fields"><label><span>Owner</span><input value="Amara Otieno" readOnly /></label><label><span>Review date</span><input value="7 November 2026" readOnly /></label></div><button className="primary-btn" type="submit" disabled={!actionTitle.trim()}>Add action <ArrowRight size={16} /></button></form></div></div>}
     {toast && <div className="toast"><CheckCircle2 size={18} />{toast}</div>}
   </div>
 }
 
 export default App
+
+
 
 
 
