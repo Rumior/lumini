@@ -4,20 +4,22 @@ import remarkMath from "remark-math";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from './lib/supabase'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
-  Building2, Calculator, Check, CheckCircle2, ChevronDown, ChevronRight,
+  ArrowRight, BarChart3, Bell, BookOpen,
+  Building2, Calculator, Check, CheckCircle2, ChevronDown,
   Circle, Clock3, Download, Home, Menu, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles,
   Target, TrendingUp, UserRound, X, Send, SlidersHorizontal, Trash2,
-  LockKeyhole, Database, Eye, CircleDollarSign, Flag
+  LockKeyhole, Database, Eye, CircleDollarSign
 } from 'lucide-react'
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import './App.css'
 import './components/insights/insights-page.css'
 import InsightsPage from './components/insights/InsightsPage'
 import { starterLibrary } from './components/insights/insights.starter-library'
 import type { Insight } from './components/insights/insights.types'
+import HomePage from './pages/HomePage'
+import { useHomePageData } from './hooks/useHomePageData'
+import { HomeSearch } from './components/home/HomeSections'
 
 type View = 'home' | 'mentor' | 'business' | 'finances' | 'plans' | 'insights' | 'settings'
 type Action = { id: number; title: string; area: string; due: string; done: boolean; impact: string }
@@ -31,6 +33,7 @@ const nav = [
   { id: 'finances' as View, label: 'Finances', icon: CircleDollarSign },
   { id: 'plans' as View, label: 'Plans & actions', icon: Target },
   { id: 'insights' as View, label: 'Insights', icon: BarChart3 },
+  { id: 'settings' as View, label: 'Settings', icon: Settings },
 ]
 const initialActions: Action[] = [
   { id: 1, title: 'Call 5 customers about delivery experience', area: 'Customer insight', due: 'Today', done: false, impact: 'High impact' },
@@ -44,20 +47,16 @@ const initialMessages: Message[] = [
 const seedFinance: Finance = { revenue: 300000, direct: 195000, expenses: 75000, price: 2500, variable: 1625, fixed: 75000 }
 
 const money = (n: number) => `KSh ${Math.round(n).toLocaleString('en-KE')}`
-const viewTitle: Record<View, string> = { home: 'Overview', mentor: 'Ask Lumini', business: 'My business', finances: 'Financial studio', plans: 'Plans & actions', insights: 'Insights', settings: 'Settings' }
-
-function Logo({ compact = false }: { compact?: boolean }) {
-  return <div className="brand"><span className="brand-mark"><span /></span>{!compact && <span className="brand-word">Lumini<small>BUSINESS MENTOR</small></span>}</div>
-}
 
 function EvidenceTag({ children, tone = '' }: { children: React.ReactNode; tone?: string }) {
   return <span className={`evidence-tag ${tone}`}><span />{children}</span>
 }
 
 function App() {
+  const homeData = useHomePageData()
   const [view, setView] = useState<View>('home')
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false)
   const [financeOsHeight, setFinanceOsHeight] = useState(1500)
-  const [mobileNav, setMobileNav] = useState(false)
   const [actions, setActions] = useState<Action[]>(() => {
     try { return JSON.parse(localStorage.getItem('lumini-actions') || 'null') || initialActions } catch { return initialActions }
   })
@@ -94,13 +93,12 @@ function App() {
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2800); return () => clearTimeout(t) }, [toast])
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setSearchOpen(false); setNewActionOpen(false); setNoticesOpen(false); setProfileOpen(false); setMobileNav(false) }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(true) }
+      if (e.key === 'Escape') { setSearchOpen(false); setNewActionOpen(false); setNoticesOpen(false); setProfileOpen(false); setWorkspaceMenuOpen(false) }
     }
     window.addEventListener('keydown', fn); return () => window.removeEventListener('keydown', fn)
   }, [])
 
-  const go = (v: View) => { setView(v); setMobileNav(false); setSearchOpen(false); setSearch(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const go = (v: View) => { setView(v); setSearchOpen(false); setSearch(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const completed = actions.filter(a => a.done).length
   const gross = finance.revenue - finance.direct
   const margin = finance.revenue ? gross / finance.revenue * 100 : 0
@@ -232,15 +230,6 @@ function App() {
       }
     }
   ]
-  const cashData = useMemo(() => {
-    const base = Math.max(operating, 0)
-    return [
-      { month: 'May', actual: base * .66, forecast: base * .7 }, { month: 'Jun', actual: base * .8, forecast: base * .78 },
-      { month: 'Jul', actual: base * .72, forecast: base * .83 }, { month: 'Aug', actual: base * .94, forecast: base * .9 },
-      { month: 'Sep', actual: base, forecast: base * .98 }, { month: 'Oct', actual: base * 1.12, forecast: base * 1.08 },
-      { month: 'Nov', actual: null, forecast: base * 1.16 }, { month: 'Dec', actual: null, forecast: base * 1.24 },
-    ]
-  }, [operating])
 
   const sendMessage = async (preset?: string) => {
     const text = (preset ?? chatInput).trim()
@@ -333,58 +322,90 @@ function App() {
   const searchResults = searchItems.filter(x => `${x.title} ${x.sub}`.toLowerCase().includes(search.toLowerCase()))
 
   return <div className="app-shell">
-    <aside className={`sidebar ${mobileNav ? 'mobile-open' : ''}`}>
-      <div className="sidebar-top"><Logo /><button className="icon-btn mobile-close" onClick={() => setMobileNav(false)} aria-label="Close menu"><X size={20} /></button></div>
-      <button className="business-switch" onClick={() => go('business')}><span className="business-monogram">AH</span><span><strong>{business.name}</strong><small>Established business</small></span><ChevronDown size={15} /></button>
-      <nav className="main-nav" aria-label="Main navigation">
-        <p className="nav-label">WORKSPACE</p>
-        {nav.map(n => <button key={n.id} className={view === n.id ? 'active' : ''} onClick={() => go(n.id)}><n.icon size={18} strokeWidth={1.6} /><span>{n.label}</span>{n.id === 'plans' && <em>{actions.filter(a => !a.done).length}</em>}</button>)}
-      </nav>
-      <div className="sidebar-bottom">
-        <div className="review-note"><span className="review-icon"><Clock3 size={16} /></span><p>Monthly review<small>Friday, 30 October</small></p><button onClick={() => go('insights')} aria-label="Open monthly review"><ChevronRight size={16} /></button></div>
-        <button className={`settings-link ${view === 'settings' ? 'active' : ''}`} onClick={() => go('settings')}><Settings size={18} /><span>Settings</span></button>
-        <div className="privacy-line"><ShieldCheck size={14} /><span>Your business, kept private</span></div>
-      </div>
-    </aside>
-    {mobileNav && <button className="nav-backdrop" onClick={() => setMobileNav(false)} aria-label="Close navigation" />}
-
     <main className="main-area">
-      <header className="topbar">
-        <div className="topbar-left"><button className="icon-btn menu-trigger" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={21} /></button><span className="crumb">AMANI WORKSPACE</span><ChevronRight size={13} /><strong>{viewTitle[view]}</strong></div>
-        <div className="topbar-actions">
-          <button className="search-trigger" onClick={() => setSearchOpen(true)}><Search size={17} /><span>Search workspace</span><kbd>Ctrl K</kbd></button>
-          <button className="icon-btn notice-btn" onClick={() => setNoticesOpen(!noticesOpen)} aria-label="Notifications"><Bell size={19} /><i /></button>
-          <div className="profile-wrap"><button className="avatar" onClick={() => setProfileOpen(!profileOpen)} aria-label="Open profile menu">AO</button>{profileOpen && <div className="profile-menu"><strong>Amara Otieno</strong><span>Owner | Amani Home & Living</span><button onClick={() => { go('settings'); setProfileOpen(false) }}><UserRound size={15} />Account settings</button><button onClick={() => { exportCSV(); setProfileOpen(false) }}><Download size={15} />Export my data</button></div>}</div>
+      <header className="lh-top lh-global-top">
+        <HomeSearch data={homeData} />
+
+        <div className="lh-global-actions">
+          <div className="lh-nav-dropdown">
+            <button
+              type="button"
+              className="lh-nav-trigger"
+              aria-expanded={workspaceMenuOpen}
+              aria-haspopup="true"
+              onClick={() => setWorkspaceMenuOpen(open => !open)}
+            >
+              <Menu size={18} />
+              <span>Workspace</span>
+              <ChevronDown size={16} />
+            </button>
+
+            {workspaceMenuOpen && (
+              <div className="lh-nav-menu" role="menu">
+                {nav.map(n => (
+                  <button
+                    type="button"
+                    key={n.id}
+                    role="menuitem"
+                    className={view === n.id ? 'active' : ''}
+                    onClick={() => {
+                      go(n.id);
+                      setWorkspaceMenuOpen(false);
+                    }}
+                  >
+                    <n.icon size={17} />
+                    <span>{n.label}</span>
+                    {n.id === 'plans' && (
+                      <em>{actions.filter(a => !a.done).length}</em>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="lh-bell"
+            onClick={() => setNoticesOpen(open => !open)}
+            aria-label="Notifications"
+          >
+            <Bell size={19} />
+          </button>
+
+          <div className="profile-wrap">
+            <button
+              className="avatar"
+              onClick={() => setProfileOpen(open => !open)}
+              aria-label="Open profile menu"
+            >
+              AO
+            </button>
+
+            {profileOpen && (
+              <div className="profile-menu">
+                <strong>Amara Otieno</strong>
+                <span>Owner | Amani Home & Living</span>
+                <button onClick={() => {
+                  go('settings');
+                  setProfileOpen(false);
+                }}>
+                  <UserRound size={15} />Account settings
+                </button>
+                <button onClick={() => {
+                  exportCSV();
+                  setProfileOpen(false);
+                }}>
+                  <Download size={15} />Export my data
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="page-content">
-        {view === 'home' && <section className="view home-view">
-          <div className="welcome-row"><div><p className="date-line">MONDAY, 26 OCTOBER</p><h1>Good morning, Amara.</h1><p>Your business is profitable. Today, let's make its cash work harder.</p></div><button className="primary-btn" onClick={() => go('mentor')}><Sparkles size={17} />Ask Lumini</button></div>
-          <div className="overview-grid">
-            <article className="priority-panel">
-              <div className="panel-kicker"><span>YOUR NEXT BEST MOVE</span><EvidenceTag>High confidence</EvidenceTag></div>
-              <div className="priority-body"><span className="priority-number">01</span><div><h2>Listen before you spend.</h2><p>Speak with five recent customers before increasing your marketing budget. Their answers will show whether repeat sales are limited by delivery, product selection, or follow-up.</p><div className="reason-row"><span><Clock3 size={14} />30 minutes</span><span><CircleDollarSign size={14} />No spend required</span><span><Flag size={14} />Review in 7 days</span></div></div></div>
-              <div className="priority-footer"><button className="text-btn light" onClick={() => go('mentor')}>See the reasoning <ArrowRight size={16} /></button><button className="gold-btn" onClick={() => { setActions(a => a.some(x => x.id === 1) ? a : [{ id: 1, title: 'Call 5 customers about delivery experience', area: 'Customer insight', due: 'Today', done: false, impact: 'High impact' }, ...a]); go('plans') }}>Add to my plan <Plus size={16} /></button></div>
-            </article>
-            <article className="health-panel">
-              <div className="section-head"><div><p className="eyebrow">BUSINESS HEALTH</p><h3>September pulse</h3></div><button className="icon-btn" onClick={() => go('insights')} aria-label="View health report"><ArrowUpRight size={18} /></button></div>
-              <div className="health-score"><div className="score-ring"><span>78<small>/100</small></span></div><div><strong>Steady, with room to strengthen</strong><p>Profitability is sound. Cash visibility is your main opportunity.</p></div></div>
-              <div className="health-bars"><div><span>Profitability <b>Strong</b></span><i><em style={{ width: '86%' }} /></i></div><div><span>Cash resilience <b>Watch</b></span><i><em className="warn" style={{ width: '58%' }} /></i></div><div><span>Customer momentum <b>Good</b></span><i><em style={{ width: '72%' }} /></i></div></div>
-            </article>
-          </div>
-          <div className="metric-strip">
-            <button onClick={() => go('finances')}><span>MONTHLY REVENUE <ArrowUpRight size={14} /></span><strong>{money(finance.revenue)}</strong><small><ArrowUpRight size={13} />8.4% from August</small></button>
-            <button onClick={() => go('finances')}><span>GROSS MARGIN <ArrowUpRight size={14} /></span><strong>{margin.toFixed(0)}%</strong><small>{margin >= 32 && margin <= 38 ? 'Within your 32-38% target' : 'Outside your 32-38% target'}</small></button>
-            <button onClick={() => go('finances')}><span>OPERATING RESULT <ArrowUpRight size={14} /></span><strong>{money(operating)}</strong><small>Before tax & unreported items</small></button>
-            <button onClick={() => go('plans')}><span>ACTIONS COMPLETE <ArrowUpRight size={14} /></span><strong>{completed}<i> / {actions.length}</i></strong><small>{actions.length - completed} priorities still open</small></button>
-          </div>
-          <div className="lower-grid">
-            <article className="actions-panel"><div className="section-head"><div><p className="eyebrow">THIS WEEK</p><h3>Priorities that matter</h3></div><button className="text-btn" onClick={() => go('plans')}>View all <ArrowRight size={15} /></button></div><div className="action-list">{actions.slice(0, 3).map(a => <div className={`action-row ${a.done ? 'is-done' : ''}`} key={a.id}><button className="check-btn" onClick={() => toggleAction(a.id)} aria-label={a.done ? `Reopen ${a.title}` : `Complete ${a.title}`}>{a.done ? <Check size={15} /> : <Circle size={17} />}</button><div><strong>{a.title}</strong><span>{a.area} | {a.impact}</span></div><time>{a.due}</time></div>)}</div></article>
-            <article className="cash-panel"><div className="section-head"><div><p className="eyebrow">LOOKING AHEAD</p><h3>Operating result</h3></div><span className="tiny-label">6 MONTH VIEW</span></div><div className="mini-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={cashData.slice(0, 6)}><defs><linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#af915f" stopOpacity={.35}/><stop offset="100%" stopColor="#af915f" stopOpacity={0}/></linearGradient></defs><Area type="monotone" dataKey="actual" stroke="#af915f" strokeWidth={2.2} fill="url(#goldFill)" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#807e77', fontSize: 11 }} /><YAxis hide domain={[0, 'auto']} /></AreaChart></ResponsiveContainer></div><div className="chart-caption"><TrendingUp size={15} /><span>Positive trajectory, based on reported results</span></div></article>
-          </div>
-          <div className="disclosure"><ShieldCheck size={15} /><span>Calculations use your reported figures, not audited statements. Last updated 25 October 2026.</span><button onClick={() => go('business')}>Review business data</button></div>
-        </section>}
+      <div className={view === 'home' ? 'page-content home-content' : 'page-content'}>
+        {view === 'home' && <HomePage data={homeData} />}
 
         {view === 'mentor' && <section className="view mentor-view">
           <div className="page-heading compact"><div><p className="date-line">YOUR BUSINESS MENTOR</p><h1>Think it through, together.</h1><p>Advice grounded in your numbers, your context, and what is still unknown.</p></div><EvidenceTag>Context connected</EvidenceTag></div>
@@ -517,17 +538,11 @@ function App() {
       </div>
     </main>
 
-    {searchOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}><div className="search-modal" role="dialog" aria-modal="true" aria-label="Search workspace"><div className="search-input"><Search size={20} /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools, reports and actions…" /><button onClick={() => setSearchOpen(false)}><X size={18} /></button></div><div className="search-results"><p>{search ? `${searchResults.length} RESULTS` : 'QUICK LINKS'}</p>{searchResults.map(x => <button key={x.title} onClick={() => go(x.view)}><span><strong>{x.title}</strong><small>{x.sub}</small></span><ArrowRight size={16} /></button>)}{!searchResults.length && <div className="no-results">No matching items. Try "finance" or "cash".</div>}</div><footer><span><kbd>Enter</kbd> to open</span><span><kbd>esc</kbd> to close</span></footer></div></div>}
-    {noticesOpen && <><button className="notice-backdrop" onClick={() => setNoticesOpen(false)} aria-label="Close notifications" /><aside className="notice-panel"><div className="section-head"><h3>Notifications</h3><button className="icon-btn" onClick={() => setNoticesOpen(false)}><X size={18} /></button></div><div className="notice-item unread"><span><Clock3 size={17} /></span><div><strong>Your monthly review is Friday</strong><p>September figures are ready for your review.</p><small>2 hours ago</small></div></div><div className="notice-item"><span><Target size={17} /></span><div><strong>One action is due today</strong><p>Customer calls are still open in this week’s plan.</p><small>Today</small></div></div><button className="text-btn" onClick={() => { go('plans'); setNoticesOpen(false) }}>Open my plan <ArrowRight size={15} /></button></aside></>}
+    {searchOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}><div className="search-modal" role="dialog" aria-modal="true" aria-label="Search workspace"><div className="search-input"><Search size={20} /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools, reports and actions..." /><button onClick={() => setSearchOpen(false)}><X size={18} /></button></div><div className="search-results"><p>{search ? `${searchResults.length} RESULTS` : 'QUICK LINKS'}</p>{searchResults.map(x => <button key={x.title} onClick={() => go(x.view)}><span><strong>{x.title}</strong><small>{x.sub}</small></span><ArrowRight size={16} /></button>)}{!searchResults.length && <div className="no-results">No matching items. Try "finance" or "cash".</div>}</div><footer><span><kbd>Enter</kbd> to open</span><span><kbd>esc</kbd> to close</span></footer></div></div>}
+    {noticesOpen && <><button className="notice-backdrop" onClick={() => setNoticesOpen(false)} aria-label="Close notifications" /><aside className="notice-panel"><div className="section-head"><h3>Notifications</h3><button className="icon-btn" onClick={() => setNoticesOpen(false)}><X size={18} /></button></div><div className="notice-item unread"><span><Clock3 size={17} /></span><div><strong>Your monthly review is Friday</strong><p>September figures are ready for your review.</p><small>2 hours ago</small></div></div><div className="notice-item"><span><Target size={17} /></span><div><strong>One action is due today</strong><p>Customer calls are still open in this week's plan.</p><small>Today</small></div></div><button className="text-btn" onClick={() => { go('plans'); setNoticesOpen(false) }}>Open my plan <ArrowRight size={15} /></button></aside></>}
     {newActionOpen && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setNewActionOpen(false) }}><div className="action-modal" role="dialog" aria-modal="true" aria-labelledby="new-action-title"><button className="modal-close icon-btn" onClick={() => setNewActionOpen(false)} aria-label="Close"><X size={19} /></button><p className="eyebrow">ADD TO YOUR PLAN</p><h2 id="new-action-title">Make the next step concrete.</h2><p>Recommendations only become actions with your approval.</p><form onSubmit={e => { e.preventDefault(); addAction() }}><label><span>Action title</span><textarea autoFocus rows={3} value={actionTitle} onChange={e => setActionTitle(e.target.value)} placeholder="What will you do?" required /></label><div className="modal-fields"><label><span>Owner</span><input value="Amara Otieno" readOnly /></label><label><span>Review date</span><input value="7 November 2026" readOnly /></label></div><button className="primary-btn" type="submit" disabled={!actionTitle.trim()}>Add action <ArrowRight size={16} /></button></form></div></div>}
     {toast && <div className="toast"><CheckCircle2 size={18} />{toast}</div>}
   </div>
 }
 
 export default App
-
-
-
-
-
-

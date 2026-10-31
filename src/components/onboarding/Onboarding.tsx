@@ -230,10 +230,6 @@ export default function Onboarding({
                 <b>{concept[0]}</b>
                 <span>{concept[1]}</span>
               </div>
-
-              <div className="priv">
-                Your information belongs to your workspace.
-              </div>
             </section>
 
             <section className="pane">
@@ -260,10 +256,6 @@ export default function Onboarding({
                       <div className="av"><Building2 size={17} /></div>
                       <div>
                         <b>Joining as a team member?</b>
-                        <p className="help">
-                          If someone has already invited you to a Lumini
-                          workspace, you can enter your invitation code here.
-                        </p>
                       </div>
                     </div>
 
