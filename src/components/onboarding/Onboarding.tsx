@@ -108,7 +108,7 @@ export default function Onboarding({
   const step = c.step;
   const idx = FLOW.indexOf(step as StepId);
   const meta = META[step] ?? META.welcome;
-  const concept = CONCEPT[step] ?? CONCEPT.welcome;
+  const concept = CONCEPT[step] ?? ['', ''];
   const isWelcome = step === 'welcome';
   const isDone = step === 'done';
   const progress = idx < 0 ? 0 : ((idx + 1) / FLOW.length) * 100;
@@ -244,7 +244,6 @@ export default function Onboarding({
                       <div className="av"><Sparkles size={17} /></div>
                       <div>
                         <b>Build your business workspace</b>
-                        <p className="help">Set up the structure Lumini will use to understand your business.</p>
                       </div>
                     </div>
                     <div className="tree">

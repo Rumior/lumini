@@ -38,7 +38,6 @@ export const ROLES: Record<Role, [string, string]> = {
 export const ROLE_OPTS: Opt[] = Object.entries(ROLES).map(([k, v]) => [k, v[0]] as Opt);
 
 export const CONCEPT: Record<string, [string, string]> = {
-  welcome: ['The structure', 'A workspace holds your businesses, projects and people.'],
   workspace: ['Workspace', 'The shared space for your team. One workspace can hold many businesses.'],
   businesses: ['Businesses', 'Each business keeps its own profile and currency. Add as many as you manage.'],
   finance: ['Starting point', 'Optional figures you enter yourself. They seed break-even and forecasts, and are never estimated.'],
@@ -50,7 +49,7 @@ export const CONCEPT: Record<string, [string, string]> = {
 };
 
 export const META: Record<string, { title: string; lede: string }> = {
-  welcome: { title: 'Your businesses, in one calm place.', lede: 'Lumini organises your work into workspaces, businesses and projects. Setup takes a few minutes and you can leave and return at any point.' },
+  welcome: { title: 'Your businesses, in one calm place.', lede: '' },
   join: { title: 'Enter your invitation', lede: 'Paste the link or code you were sent. We verify it securely before showing anything about the workspace.' },
   workspace: { title: 'Name your workspace', lede: 'The shared environment for your team. It can hold several businesses, and you’ll be its owner.' },
   businesses: { title: 'Add your businesses', lede: 'Start with one, or add several. Each keeps its own profile, currency and financial year. Open “More about this business” to add detail now or later.' },
