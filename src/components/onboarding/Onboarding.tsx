@@ -232,7 +232,7 @@ export default function Onboarding({
               </div>
 
               <div className="priv">
-                Your information belongs to your workspace. Lumini will not invent financial figures.
+                Your information belongs to your workspace.
               </div>
             </section>
 
