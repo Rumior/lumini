@@ -20,6 +20,7 @@ import type { Insight } from './components/insights/insights.types'
 import HomePage from './pages/HomePage'
 import { useHomePageData } from './hooks/useHomePageData'
 import { HomeSearch } from './components/home/HomeSections'
+import type { HomePageData } from './types/home'
 
 type View = 'home' | 'mentor' | 'business' | 'finances' | 'plans' | 'insights' | 'settings'
 type Action = { id: number; title: string; area: string; due: string; done: boolean; impact: string }
@@ -53,16 +54,26 @@ function EvidenceTag({ children, tone = '' }: { children: React.ReactNode; tone?
 }
 
 function App() {
-  const homeData = useHomePageData()
+  const homeLive = useHomePageData()
   const [view, setView] = useState<View>('home')
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false)
   const [financeOsHeight, setFinanceOsHeight] = useState(1500)
   const [actions, setActions] = useState<Action[]>(() => {
-    try { return JSON.parse(localStorage.getItem('lumini-actions') || 'null') || initialActions } catch { return initialActions }
+    try {
+      return JSON.parse(localStorage.getItem('lumini-actions') || 'null') || initialActions
+    } catch {
+      return initialActions
+    }
   })
+
   const [finance, setFinance] = useState<Finance>(() => {
-    try { return JSON.parse(localStorage.getItem('lumini-finance') || 'null') || seedFinance } catch { return seedFinance }
+    try {
+      return JSON.parse(localStorage.getItem('lumini-finance') || 'null') || seedFinance
+    } catch {
+      return seedFinance
+    }
   })
+
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
@@ -99,10 +110,27 @@ function App() {
   }, [])
 
   const go = (v: View) => { setView(v); setSearchOpen(false); setSearch(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
-  const completed = actions.filter(a => a.done).length
+  const homeData: HomePageData = {
+    ...homeLive,
+    actions: {
+      ...homeLive.actions,
+      onNewBusiness: () => go('business'),
+      onNewProject: () => go('plans'),
+      onAddTask: () => setNewActionOpen(true),
+      onInviteMember: () => go('business'),
+      onAddToPlans: () => {
+        setToast('Added to Plans')
+        go('plans')
+      },
+      onAskLumini: () => {
+        go('mentor')
+      },
+    },
+  }
   const gross = finance.revenue - finance.direct
   const margin = finance.revenue ? gross / finance.revenue * 100 : 0
   const operating = gross - finance.expenses
+  const completed = actions.filter(action => action.done).length
   const insightsData: Insight[] = [
     {
       id: 'gross-margin',

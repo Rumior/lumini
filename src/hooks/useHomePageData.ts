@@ -346,20 +346,22 @@ export function useHomePageData(source?: HomeSource) {
         };
 
         if (!cancelled) {
-          setData({
+          setData((previous) => ({
+            ...previous,
             userName: user.user_metadata?.full_name ?? user.email?.split('@')[0],
             businesses,
             projects,
             tasks,
             teamCount,
-            activity: [],
-            insights: [],
+            activity: previous.activity.length ? previous.activity : [],
+            insights: previous.insights.length ? previous.insights : [],
             actions: {
+              ...previous.actions,
               onToggleTask,
             },
             loading: false,
             isDemo: false,
-          });
+          }));
         }
       } catch (error) {
         if (!cancelled) {
