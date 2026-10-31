@@ -142,7 +142,7 @@ export default function Onboarding({
         <b>{label}</b>
         <span>{description}</span>
       </span>
-      <span className="tick">âœ“</span>
+      <span className="tick">✓</span>
     </button>
   );
 
@@ -201,7 +201,7 @@ export default function Onboarding({
                 key={id}
                 className={idx === i ? 'on' : idx > i ? 'ok' : ''}
               >
-                <i>{idx > i ? 'âœ“' : i + 1}</i>
+                <i>{idx > i ? '✓' : i + 1}</i>
                 <span>{LABEL[id]}</span>
               </li>
             ))}
