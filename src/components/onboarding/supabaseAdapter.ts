@@ -74,7 +74,8 @@ export const supabaseAdapter: OnboardingAdapter = {
     }
   },
 
-  async verifyInvitation(_code) {
+  async verifyInvitation(_code: string) {
+    void _code;
     return {
       ok: false,
       message: 'Invitation acceptance is not available yet. Please ask the workspace owner to add you when team invitations are enabled.',

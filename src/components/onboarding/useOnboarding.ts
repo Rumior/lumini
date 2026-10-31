@@ -2,20 +2,41 @@ import { useCallback, useEffect, useState } from 'react';
 import { FLOW, emptyDraft, newBusiness, newInvite } from './config';
 import type { Draft, Errors, OnboardingAdapter, Step, StepId } from './types';
 
-export const getIn = (o: unknown, path: string): any =>
-  path.split('.').reduce<any>((a, k) => a?.[k], o);
+export const getIn = (o: unknown, path: string): unknown =>
+  path.split('.').reduce<unknown>((current, key) => {
+    if (Array.isArray(current)) return current[Number(key)];
 
-const setIn = (o: any, p: string[], v: unknown): any => {
+    if (current !== null && typeof current === 'object') {
+      return (current as Record<string, unknown>)[key];
+    }
+
+    return undefined;
+  }, o);
+
+const setIn = (o: unknown, p: string[], v: unknown): unknown => {
   if (!p.length) return v;
-  const [k, ...r] = p;
-  if (Array.isArray(o)) {
-    const c = [...o];
-    c[+k] = setIn(o[+k], r, v);
-    return c;
-  }
-  return { ...o, [k]: setIn(o?.[k], r, v) };
-};
 
+  const [k, ...r] = p;
+
+  if (Array.isArray(o)) {
+    const index = Number(k);
+    if (!Number.isInteger(index) || index < 0) return o;
+
+    const copy = [...o];
+    copy[index] = setIn(o[index], r, v);
+    return copy;
+  }
+
+  if (o !== null && typeof o === 'object') {
+    const record = o as Record<string, unknown>;
+    return {
+      ...record,
+      [k]: setIn(record[k], r, v),
+    };
+  }
+
+  return o;
+};
 export function validate(step: Step, d: Draft): Errors {
   const e: Errors = {};
 
@@ -162,7 +183,7 @@ export function useOnboarding(adapter: OnboardingAdapter, opts: Options = {}) {
   }, []);
 
   const set = useCallback((path: string, v: unknown) => {
-    setD((p) => setIn(p, path.split('.'), v));
+    setD((p) => setIn(p, path.split('.'), v) as Draft);
     setErr((e) => {
       if (!(path in e)) return e;
       const n = { ...e };
@@ -172,7 +193,10 @@ export function useOnboarding(adapter: OnboardingAdapter, opts: Options = {}) {
   }, []);
 
   const toggle = (path: string, k: string) => {
-    const a: string[] = getIn(d, path) || [];
+    const value = getIn(d, path);
+    const a = Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === 'string')
+      : [];
     set(path, a.includes(k) ? a.filter((x) => x !== k) : [...a, k]);
   };
 
